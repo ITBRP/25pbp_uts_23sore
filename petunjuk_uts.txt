@@ -8,4 +8,4 @@ Tugas :
 Buat project BE dengan nama project/folder NIM_NICKNAME
 
 Link API Doc:
-https://docs.google.com/document/d/1lrdaTwCspIlHtKC30rjHr5oDtqINZCHtiviK5XiTQOI/edit?usp=sharing
+https://docs.google.com/document/d/15LJ5i5tQxlyBaOdtop1LX-JyqbT61FOJDyVfqzTpbq4/edit?usp=sharing
