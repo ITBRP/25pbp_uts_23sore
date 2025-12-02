@@ -1,0 +1,11 @@
+- Dilarang menggunakan chatgpt
+- Branch acuan adalah master
+- Nama branch NIM_NICKNAME
+- PR terakhir pukul 10.30 WIB hari 
+- PR harus melampirkan hasi test postman lengkap setiap case
+
+Tugas :
+Buat project BE dengan nama project/folder NIM_NICKNAME
+
+Link API Doc:
+https://docs.google.com/document/d/1lrdaTwCspIlHtKC30rjHr5oDtqINZCHtiviK5XiTQOI/edit?usp=sharing
