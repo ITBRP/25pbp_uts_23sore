@@ -1,6 +1,10 @@
 <?php
 header("Content-Type: application/json; charset=UTF-8");
 
+// Hilangkan semua warning/notice agar JSON tetap bersih
+error_reporting(0);
+mysqli_report(MYSQLI_REPORT_OFF);
+
 // Pastikan method = PUT
 if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {
     http_response_code(405);

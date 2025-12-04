@@ -1,6 +1,10 @@
 <?php 
 header("Content-Type: application/json; charset=UTF-8");
 
+// Hilangkan semua warning/notice agar JSON tetap bersih
+error_reporting(0);
+mysqli_report(MYSQLI_REPORT_OFF);
+
 // Validasi method
 if ($_SERVER['REQUEST_METHOD'] != 'POST') {
     http_response_code(405);
@@ -64,12 +68,13 @@ if (isset($_POST['stock']) && $_POST['stock'] !== "") {
 }
 
 /* ---------------------------------
-    VALIDASI: image (optional)
+    VALIDASI: image
 -----------------------------------*/
 $imageName = null;
 
-if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-
+if (!isset($_FILES['image']) || $_FILES['image']['error'] != 0) {
+    $errors['image'] = "Format file tidak valid (hanya jpg, jpeg, png)";
+} else {
     $allowedExt = ['jpg', 'jpeg', 'png'];
     $fileExt = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
     $fileSize = $_FILES['image']['size'];
@@ -79,20 +84,16 @@ if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
     } elseif ($fileSize > 3 * 1024 * 1024) {
         $errors['image'] = "Ukuran maksimal 3MB";
     } else {
-        // pastikan folder uploads ada
+
         if (!is_dir("uploads")) {
-            if (!mkdir("uploads", 0755, true)) {
-                $errors['image'] = "Gagal membuat folder upload";
-            }
+            mkdir("uploads", 0755, true);
         }
 
-        if (empty($errors['image'])) {
-            $imageName = basename($_FILES['image']['name']);
-            $moveResult = move_uploaded_file($_FILES['image']['tmp_name'], "uploads/" . $imageName);
-            if (!$moveResult) {
-                $errors['image'] = "Gagal menyimpan file image";
-                $imageName = null;
-            }
+        $imageName = basename($_FILES['image']['name']);
+
+        if (!move_uploaded_file($_FILES['image']['tmp_name'], "uploads/" . $imageName)) {
+            $errors['image'] = "Gagal menyimpan file image";
+            $imageName = null;
         }
     }
 }
@@ -111,11 +112,13 @@ if (count($errors) > 0) {
 }
 
 /* ---------------------------------
-    KONEKSI DATABASE
+    KONEKSI DATABASE — versi aman
 -----------------------------------*/
-$koneksi = new mysqli('localhost', 'root', '', 'be');
 
-if ($koneksi->connect_error) {
+$koneksi = @new mysqli('localhost', 'root', '', 'be');
+
+// Jika koneksi DB gagal → langsung 500
+if ($koneksi->connect_errno) {
     http_response_code(500);
     echo json_encode([
         "status" => "error",
@@ -127,11 +130,11 @@ if ($koneksi->connect_error) {
 /* ---------------------------------
     INSERT DATA
 -----------------------------------*/
+
 $name = $koneksi->real_escape_string($name);
 $category = $koneksi->real_escape_string($category);
 $price = intval($_POST['price']);
 $imageValue = $imageName !== null ? $koneksi->real_escape_string($imageName) : null;
-
 
 if ($imageValue === null) {
     $q = "INSERT INTO products(name, category, price, stock, image)
@@ -143,15 +146,16 @@ if ($imageValue === null) {
 
 if (!$koneksi->query($q)) {
     http_response_code(500);
+
+    // hapus file kalau insert gagal
+    if ($imageName !== null && file_exists("uploads/" . $imageName)) {
+        @unlink("uploads/" . $imageName);
+    }
+
     echo json_encode([
         "status" => "error",
         "msg" => "Server error"
     ]);
-    // jika file sudah diupload tapi DB gagal, hapus file untuk cleanup
-    if ($imageName !== null && file_exists("uploads/" . $imageName)) {
-        @unlink("uploads/" . $imageName);
-    }
-    $koneksi->close();
     exit();
 }
 
