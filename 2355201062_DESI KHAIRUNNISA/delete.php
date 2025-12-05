@@ -66,7 +66,7 @@ if (!$koneksi->query($q)) {
     exit;
 }
 
-// Hapus file gambar jika ada
+// Hapus file gambar jika ada  
 if ($oldImage && file_exists("img/" . $oldImage)) {
     unlink("img/" . $oldImage);
 }
