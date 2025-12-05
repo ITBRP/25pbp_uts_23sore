@@ -2,23 +2,23 @@
 header("Content-Type: application/json; charset=UTF-8");
 
 if($_SERVER['REQUEST_METHOD'] != 'GET'){
-    http_response_code(405);
+    http_response_code(500);
     $res = [
         'status' => 'error',
-        'msg' => 'Method Salah'
+        'msg' => 'Server Salah'
     ];
     echo json_encode($res);
     exit();
 }
 
-if(isset($_GET['force500'])){
-    http_response_code(500);
-    echo json_encode([
-        'status' => 'error',
-        'msg' => 'Server error'
-    ]);
-    exit();
-}
+// if(isset($_GET['force500'])){
+//     http_response_code(500);
+//     echo json_encode([
+//         'status' => 'error',
+//         'msg' => 'Server error'
+//     ]);
+//     exit();
+// }
 
 $koneksi = mysqli_connect("localhost","root","","uts_be");
 $q = mysqli_query($koneksi, "SELECT * FROM mahasiswa");
@@ -34,6 +34,15 @@ if(count($data) == 0){
         'msg' => 'Data not found'
     ];
     echo json_encode($res);
+    exit();
+}
+
+if(true){
+    http_response_code(500);
+    echo json_encode([
+        'status' => 'error',
+        'msg' => 'Server error'
+    ]);
     exit();
 }
 
