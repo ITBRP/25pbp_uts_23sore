@@ -30,7 +30,7 @@ if(count($data) == 0){
 
 http_response_code(200);
 $res = [
-    'status' => 'succcess',
+    'status' => 'success',
     'msg' => 'Process success',
     'data' => $data
 ];
