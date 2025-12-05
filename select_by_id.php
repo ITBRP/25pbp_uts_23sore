@@ -3,8 +3,8 @@ header("Content-Type: application/json; charset=UTF-8");
 require "db.php";
 
 if($_SERVER['REQUEST_METHOD'] != 'GET'){
-    http_response_code(405);
-    echo json_encode(["status"=>"error","msg"=>"Method salah!"]);
+    http_response_code(500);
+    echo json_encode(["status"=>"error","msg"=>"Server Error!"]);
     exit();
 }
 
