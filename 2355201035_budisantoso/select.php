@@ -1,0 +1,70 @@
+<?php
+header("Content-Type: application/json; charset=UTF-8");
+
+// Matikan error bawaan PHP agar tidak keluar HTML error
+mysqli_report(MYSQLI_REPORT_OFF);
+
+// Wajib GET
+if ($_SERVER["REQUEST_METHOD"] !== "GET") {
+    http_response_code(405);
+    echo json_encode([
+        "status" => "error",
+        "msg"    => "Method salah!"
+    ]);
+    exit;
+}
+
+$koneksi = new mysqli("localhost", "root", "", "uts_be");
+
+// Jika koneksi error → langsung 500
+if ($koneksi->connect_errno) {
+    http_response_code(500);
+    echo json_encode([
+        "status" => "error",
+        "msg"    => "Server error"
+    ]);
+    exit;
+}
+
+// ===============================
+//  QUERY NORMAL (UNTUK 200)
+//  GUNAKAN QUERY SALAH UNTUK TEST 500
+// ===============================
+
+// QUERY BENAR:
+// $q = "SELECT * FROM data_barang";
+
+// QUERY SALAH (untuk memicu 500):
+$q = "SELECT * FROM data_barangsalah";  // Table salah → memicu error server
+
+$result = $koneksi->query($q);
+
+if (!$result) {
+    // Query salah → error server
+    http_response_code(500);
+    echo json_encode([
+        "status" => "error",
+        "msg"    => "Server error"
+    ]);
+    exit;
+}
+
+$data = [];
+while ($row = $result->fetch_assoc()) {
+    $data[] = [
+        "id"       => (int)$row["id"],
+        "name"     => $row["name"],
+        "category" => $row["category"],
+        "price"    => (int)$row["price"],
+        "stock"    => (int)$row["stock"],
+        "image"    => $row["image"]
+    ];
+}
+
+// SUCCESS 200
+http_response_code(200);
+echo json_encode([
+    "status" => "success",
+    "msg"    => "Process success",
+    "data"   => $data
+]);
