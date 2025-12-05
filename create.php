@@ -112,6 +112,8 @@ $q = "INSERT INTO items(name, category, price, stock, image) VALUES('$name','$ca
 $koneksi->query($q);
 $id = $koneksi->insert_id;
 
+http_response_code(201);
+
 echo json_encode([
     'status' => 'success',
     'msg' => 'Proses berhasil',
@@ -124,6 +126,4 @@ echo json_encode([
             "image" => $namaPhoto
         ]
 ]);
-
-http_response_code(201);
 
