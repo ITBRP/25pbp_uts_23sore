@@ -79,6 +79,13 @@ if (isset($_FILES['photo'])) {
 
 }
 
+
+if (isset($_FILES['photo']) && $_FILES['photo']['error'] !== UPLOAD_ERR_NO_FILE) {
+    if ($_FILES['photo']['size'] > 3 * 1024 * 1024) {
+        $errors['photo'] = "Maksimal size photo harus 3 mb";
+    }
+}
+
 if (count($errors) > 0) {
     http_response_code(400);
     $res = [
@@ -117,4 +124,6 @@ echo json_encode([
             "image" => $namaPhoto
         ]
 ]);
+
+http_response_code(201);
 

@@ -21,44 +21,51 @@ if(!isset($data['name'])){
 }else{
     if($data['name']==''){
         $errors['name'] = "silahkan isi name";
-    }else if(strlen($data['name']) < 2){
-        $errors['name'] = "name harus memiliki 3 karakter!";
+    }else if(strlen($data['name']) < 3){
+        $errors['name'] = "name harus memiliki minimal 3 karakter!";
     }
 }
 
-if (!isset(($_POST['category']))) {
+if (!isset($data['category'])) {
     $errors['category'] = "Silahkan mengisi category";
 } else {
-    if ($_POST['category'] != "Elektronik" && $_POST['category'] != "Fashion" && $_POST['category'] != "Makanan" && $_POST['category'] != "Lainnya") {
+    if ($data['category'] != "Elektronik" && $data['category'] != "Fashion" && $data['category'] != "Makanan" && $data['category'] != "Lainnya") {
         $errors['category'] = "Category hanya diisi dengan Elektronik, Fashion, Makanan, dan Lainnya";
     }
 }
 
-if (!isset($_POST['price'])) {
+if (!isset($data['price'])) {
     $errors['price'] = "price belum dikirim";
 } else {
-    if ($_POST['price'] == '') {
+    if ($data['price'] === '') {
         $errors['price'] = "price tidak boleh kosong";
     } else {
-        if (!is_numeric($_POST['price'])) {
+        if (!is_numeric($data['price'])) {
             $errors['price'] = "price harus berupa angka";
-            exit();
-        } else if ($_POST['price'] < 0) {
+        } else if ($data['price'] < 0) {
             $errors['price'] = "price harus minimal 0";
         }
     }
 }
 
-$_POST['stock'] = null;
+$stock = isset($data['stock']) && $data['stock'] !== ''
+    ? $data['stock']
+    : 0;
 
-if (isset($_POST['stock'])) {
-    if (!is_numeric($_POST['stock'])) {
-        $errors['stock'] = "stock harus berupa angka";
-        exit();
-    } else if ($_POST['stock'] < 0) {
-        $errors['stock'] = "stock harus minimal 0";
-    }
+if (!is_numeric($stock) || $stock < 0) {
+    $errors['stock'] = "stock harus angka dan minimal 0";
 }
+
+
+if (!empty($errors)) {
+    http_response_code(400);
+    echo json_encode([
+        "status" => "error",
+        "errors" => $errors
+    ]);
+    exit;
+}
+
 
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 $koneksi = new mysqli("localhost", "root", "", "uts_pbp");
