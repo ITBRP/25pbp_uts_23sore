@@ -1,6 +1,14 @@
 <?php
 header("Content-Type: application/json; charset=UTF-8");
-require "db.php";
+
+mysqli_report(MYSQLI_REPORT_OFF);
+$koneksi = new mysqli("localhost", "root", "", "db_be_uts");
+
+if ($koneksi->connect_errno) {
+    http_response_code(500);
+    echo json_encode(["status"=>"error","msg"=>"Server error"]);
+    exit();
+}
 
 if($_SERVER['REQUEST_METHOD'] != 'DELETE'){
     http_response_code(500);
@@ -15,6 +23,7 @@ if(!isset($_GET['id'])){
 }
 
 $id = $_GET['id'];
+
 $cek = $koneksi->prepare("SELECT id FROM buku WHERE id=?");
 $cek->bind_param("i",$id);
 $cek->execute();
@@ -36,4 +45,3 @@ echo json_encode([
     "msg"=>"Delete data success",
     "data"=>["id"=>$id]
 ], JSON_PRETTY_PRINT);
-?>

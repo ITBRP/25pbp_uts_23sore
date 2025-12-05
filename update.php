@@ -1,13 +1,18 @@
 <?php
 header("Content-Type: application/json; charset=UTF-8");
-require "db.php";
+
+mysqli_report(MYSQLI_REPORT_OFF);
+$koneksi = new mysqli("localhost", "root", "", "db_be_uts");
+
+if ($koneksi->connect_errno) {
+    http_response_code(500);
+    echo json_encode(["status"=>"error","msg"=>"Server error"]);
+    exit();
+}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {
     http_response_code(500);
-    echo json_encode([
-        "status" => "error",
-        "msg" => "Server Error!"
-    ]);
+    echo json_encode(["status" => "error", "msg" => "Server Error!"]);
     exit;
 }
 
@@ -15,34 +20,38 @@ parse_str(file_get_contents("php://input"), $_PUT);
 
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
     http_response_code(400);
-    echo json_encode([
-        "status" => "error",
-        "msg" => "ID belum dikirim atau tidak valid"
-    ]);
+    echo json_encode(["status" => "error","msg" => "ID belum dikirim atau tidak valid"]);
     exit;
 }
 
 $id = intval($_GET['id']);
 
+$cek = $koneksi->prepare("SELECT * FROM buku WHERE id = ?");
+$cek->bind_param("i", $id);
+$cek->execute();
+$res = $cek->get_result();
+
+if ($res->num_rows == 0) {
+    http_response_code(404);
+    echo json_encode(["status" => "error","msg" => "Data tidak ditemukan"]);
+    exit;
+}
+
 $errors = [];
 
-// name
 if (!isset($_PUT['name']) || strlen($_PUT['name']) < 3) {
     $errors['name'] = "Minimal 3 karakter";
 }
 
-// category
 $allowed = ['Elektronik', 'Fashion', 'Makanan', 'Lainnya'];
 if (!isset($_PUT['category']) || !in_array($_PUT['category'], $allowed)) {
     $errors['category'] = "Kategori tidak valid";
 }
 
-// price
 if (!isset($_PUT['price']) || !is_numeric($_PUT['price']) || $_PUT['price'] <= 0) {
     $errors['price'] = "Harus angka, lebih dari 0";
 }
 
-// stock
 if (isset($_PUT['stock']) && (!is_numeric($_PUT['stock']) || $_PUT['stock'] < 0)) {
     $errors['stock'] = "Harus angka minimal 0";
 }
@@ -53,20 +62,6 @@ if (!empty($errors)) {
         "status" => "error",
         "msg" => "Data error",
         "errors" => $errors
-    ]);
-    exit;
-}
-
-$cek = $koneksi->prepare("SELECT * FROM buku WHERE id = ?");
-$cek->bind_param("i", $id);
-$cek->execute();
-$res = $cek->get_result();
-
-if ($res->num_rows == 0) {
-    http_response_code(404);
-    echo json_encode([
-        "status" => "error",
-        "msg" => "Data tidak ditemukan"
     ]);
     exit;
 }
@@ -98,4 +93,3 @@ echo json_encode([
         "image" => $imageName
     ]
 ], JSON_PRETTY_PRINT);
-

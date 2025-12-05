@@ -1,6 +1,14 @@
 <?php
 header("Content-Type: application/json; charset=UTF-8");
-require "db.php";
+
+mysqli_report(MYSQLI_REPORT_OFF);
+$koneksi = new mysqli("localhost", "root", "", "db_be_uts");
+
+if ($koneksi->connect_errno) {
+    http_response_code(500);
+    echo json_encode(["status"=>"error","msg"=>"Server error"]);
+    exit();
+}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(500);
@@ -54,14 +62,9 @@ if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
     }
 
     if (empty($errors)) {
-
         $outputImageName = $originalName;
-
-        $filenameOnly = pathinfo($originalName, PATHINFO_FILENAME);
-        $uniqueName = $filenameOnly . "_" . uniqid() . "." . $ext;
-
+        $uniqueName = pathinfo($originalName, PATHINFO_FILENAME) . "_" . uniqid() . "." . $ext;
         $imageDBName = $uniqueName;
-
         move_uploaded_file($_FILES['image']['tmp_name'], "img/" . $uniqueName);
     }
 }
@@ -84,6 +87,8 @@ $stmt->bind_param("ssiis", $name, $category, $price, $stock, $imageDBName);
 
 if ($stmt->execute()) {
 
+    http_response_code(201);
+
     echo json_encode([
         "status" => "success",
         "msg" => "Process success",
@@ -99,7 +104,7 @@ if ($stmt->execute()) {
     exit;
 }
 
+
 http_response_code(500);
 echo json_encode(["status" => "error", "msg" => "Server error"]);
 exit;
-?>
