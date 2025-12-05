@@ -46,7 +46,6 @@ if(!$cek){
     exit();
 }
 
-
 $Delete = mysqli_query($koneksi, "DELETE FROM mahasiswa WHERE id = '$id'");
 if(!$Delete){
     http_response_code(500);
@@ -56,7 +55,6 @@ if(!$Delete){
     ]);
     exit();
 }
-
 
 http_response_code(200);
 echo json_encode([
