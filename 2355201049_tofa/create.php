@@ -7,7 +7,7 @@ if($_SERVER['REQUEST_METHOD'] != 'POST'){
     exit();
 }
 
-// VALIDASI (pakai $_POST karena form-data)
+// VALIDASI
 $errors = [];
 
 /* ---- NAME ---- */
