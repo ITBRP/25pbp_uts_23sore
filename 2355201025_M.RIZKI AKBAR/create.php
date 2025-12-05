@@ -13,11 +13,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $errors = [];
 
-// ==========================
-// VALIDATION
-// ==========================
+//validasi
 
-// name (required, min 3 char)
+// name 3 karakter
 if (!isset($_POST['name'])) {
     $errors['name'] = "Name tidak dikirim";
 } else {
@@ -61,7 +59,7 @@ if (isset($_POST['stock']) && $_POST['stock'] !== "") {
     }
 }
 
-// image (optional, jpg/jpeg/png, max 3MB)
+// img (jpg, jpeg, png)
 $imageName = null;
 
 if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
@@ -80,9 +78,7 @@ if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE)
     }
 }
 
-// ==========================
-// SEND ERROR RESPONSE
-// ==========================
+// error 400
 if (count($errors) > 0) {
     http_response_code(400);
     echo json_encode([
@@ -93,12 +89,10 @@ if (count($errors) > 0) {
     exit;
 }
 
-// ==========================
-// DATABASE
-// ==========================
+// databases
 error_reporting(0);                                                   // wajib yang lain sunah
 mysqli_report(MYSQLI_REPORT_OFF);
-$koneksi = new mysqli("localhost", "root", "", "uts_github");
+$koneksi = new mysqli("localhost", "root", "", "uts_backend");
 
 if ($koneksi->connect_errno) {
     http_response_code(500);
@@ -109,17 +103,13 @@ if ($koneksi->connect_errno) {
     exit;
 }
 
-// ==========================
-// SAVE IMAGE IF EXISTS
-// ==========================
+// gambar
 if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
     $imageName = md5(uniqid()) . "." . $ext;
     move_uploaded_file($_FILES['image']['tmp_name'], "img/" . $imageName);
 }
 
-// ==========================
-// INSERT DATABASE
-// ==========================
+//databases
 $q = "INSERT INTO products (name, category, price, stock, image)
       VALUES ('$name', '$category', '$price', " .
       ($stock !== null ? "'$stock'" : "NULL") . ", " .
@@ -137,9 +127,7 @@ if (!$koneksi->query($q)) {
 
 $id = $koneksi->insert_id;
 
-// ==========================
-// SUCCESS RESPONSE (201)
-// ==========================
+// respons 201
 http_response_code(201);
 echo json_encode([
     "status" => "success",
@@ -153,4 +141,6 @@ echo json_encode([
         "image" => $imageName
     ]
 ]);
+// 2355201025
 ?>
+
