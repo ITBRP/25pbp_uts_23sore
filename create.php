@@ -8,10 +8,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// ======================================
-// VALIDASI INPUT
-// ======================================
-
 $errors = [];
 
 $name     = $_POST['name'] ?? "";
@@ -35,21 +31,17 @@ if (!is_numeric($price) || $price <= 0) {
     $errors['price'] = "Harus angka, lebih dari 0";
 }
 
-// stock (optional)
+// stock
 if ($stock !== "" && (!is_numeric($stock) || $stock < 0)) {
     $errors['stock'] = "Harus angka minimal 0";
 }
 
-// ======================================
-// VALIDASI IMAGE
-// ======================================
-
-$imageDBName = null;        // nama unik (DB)
-$outputImageName = null;    // nama asli (output JSON)
+$imageDBName = null;      
+$outputImageName = null;   
 
 if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
 
-    $originalName = $_FILES['image']['name']; // nama asli
+    $originalName = $_FILES['image']['name'];
     $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
     $allowed_ext = ['jpg', 'jpeg', 'png'];
 
@@ -63,17 +55,13 @@ if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
 
     if (empty($errors)) {
 
-        // 🔵 Nama file asli untuk output Postman
         $outputImageName = $originalName;
 
-        // 🔵 Nama unik untuk database dan penyimpanan
         $filenameOnly = pathinfo($originalName, PATHINFO_FILENAME);
         $uniqueName = $filenameOnly . "_" . uniqid() . "." . $ext;
 
-        // simpan untuk database
         $imageDBName = $uniqueName;
 
-        // pindahkan file
         move_uploaded_file($_FILES['image']['tmp_name'], "img/" . $uniqueName);
     }
 }
@@ -87,10 +75,6 @@ if (!empty($errors)) {
     ]);
     exit;
 }
-
-// ======================================
-// INSERT DATABASE
-// ======================================
 
 $stmt = $koneksi->prepare(
     "INSERT INTO buku (name, category, price, stock, image)
@@ -109,7 +93,7 @@ if ($stmt->execute()) {
             "category" => $category,
             "price"    => intval($price),
             "stock"    => intval($stock),
-            "image"    => $outputImageName   // TAMPILKAN NAMA ASLI
+            "image"    => $outputImageName
         ]
     ]);
     exit;
