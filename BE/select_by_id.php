@@ -2,6 +2,7 @@
 header("Content-Type: application/json; charset=UTF-8");
 
 if ($_SERVER['REQUEST_METHOD'] != 'GET') {
+    http_response_code(500);
     echo json_encode(['status'=>'error','msg'=>'Server Error!']);
     exit();
 }
@@ -28,6 +29,7 @@ $data = $res->fetch_assoc();
 
 // Jika null berarti tidak ada data
 if (!$data) {
+    http_response_code(400);
     echo json_encode(['status'=>'error','msg'=>'Data not found']);
     exit();
 }
