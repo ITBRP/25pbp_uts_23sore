@@ -91,6 +91,9 @@ if (count($errors) > 0) {
     exit();
 }
 
+if ($anyPhoto) {
+    move_uploaded_file($_FILES['photo']['tmp_name'], 'img/' . $namaPhoto);
+}
 
 // insert ke db
 $koneksi = new mysqli('localhost', 'root', '', 'uts_pbp');

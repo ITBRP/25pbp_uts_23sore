@@ -3,7 +3,7 @@ header("Content-Type: application/json; charset=UTF-8");
 
 
 if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {
-    http_response_code(500);
+    http_response_code(405);
     echo json_encode([
         "status" => "error",
         "msg" => "Server error"
@@ -11,10 +11,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {
     exit;
 }
 
-
 $raw = file_get_contents("php://input");
 $data = json_decode($raw, true);
-
 
 $errors = [];
 
@@ -27,7 +25,6 @@ if(!isset($data['name'])){
         $errors['name'] = "name harus memiliki 3 karakter!";
     }
 }
-
 
 if (!isset(($_POST['category']))) {
     $errors['category'] = "Silahkan mengisi category";
@@ -54,7 +51,6 @@ if (!isset($_POST['price'])) {
 
 $_POST['stock'] = null;
 
-
 if (isset($_POST['stock'])) {
     if (!is_numeric($_POST['stock'])) {
         $errors['stock'] = "stock harus berupa angka";
@@ -64,7 +60,8 @@ if (isset($_POST['stock'])) {
     }
 }
 
-
+$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+$koneksi = new mysqli("localhost", "root", "", "uts_pbp");
 $cek = $koneksi->query("SELECT * FROM items WHERE id=$id");
 if (!$cek || $cek->num_rows == 0) {
     http_response_code(404);
@@ -75,14 +72,13 @@ if (!$cek || $cek->num_rows == 0) {
     exit;
 }
 
-$koneksi = new mysqli("localhost", "root", "", "uts_pbp");
 $q = "
-    UPDATE car SET
+    UPDATE items SET
         name = '".$koneksi->real_escape_string($data['name'])."',
         category = '".$koneksi->real_escape_string($data['category'])."',
         price = '".$koneksi->real_escape_string($data['price'])."',
         stock = '".$koneksi->real_escape_string($data['stock'])."',
-        photo = '".($data['photo'] ?? "")."'
+        image = '".($data['photo'] ?? "")."'
     WHERE id = $id
 ";
 
@@ -94,7 +90,6 @@ if (!$koneksi->query($q)) {
     ]);
     exit;
 }
-
 
 http_response_code(200);
 
