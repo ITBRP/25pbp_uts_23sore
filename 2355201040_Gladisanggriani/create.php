@@ -68,7 +68,7 @@ if (isset($_FILES['image'])) {
             $errors['image'] = "Format file tidak valid (jpg, jpeg, png)";
         } else {
             $anyImage = true;
-            $namaImage = md5(date('dmyhis')) . "." . $fileExt;
+            $namaImage = $fileName;
         }
     }
 }
