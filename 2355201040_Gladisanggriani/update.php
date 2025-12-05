@@ -63,7 +63,6 @@ if(!$koneksi){
     exit();
 }
 
-// **Cek apakah data dengan ID ini ada**
 $cek = $koneksi->query("SELECT * FROM mahasiswa WHERE id='$id'");
 if(!$cek){
     http_response_code(500);
