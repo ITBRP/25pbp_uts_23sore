@@ -2,10 +2,10 @@
 header("Content-Type: application/json; charset=UTF-8");
 
 if($_SERVER['REQUEST_METHOD'] != 'DELETE'){
-    http_response_code(405);
+    http_response_code(500);
     $res = [
         'status' => 'error',
-        'msg' => 'Method salah !'
+        'msg' => 'Server error'
     ];
     echo json_encode($res);
     exit();
@@ -19,6 +19,15 @@ if(!isset($data['id']) || $data['id'] == ""){
     echo json_encode([
         'status' => 'error',
         'msg' => 'ID tidak boleh kosong'
+    ]);
+    exit();
+}
+
+if(true){
+    http_response_code(500);
+    echo json_encode([
+        'status' => 'error',
+        'msg' => 'Server error'
     ]);
     exit();
 }
@@ -47,6 +56,7 @@ if(!$Delete){
     ]);
     exit();
 }
+
 
 http_response_code(200);
 echo json_encode([

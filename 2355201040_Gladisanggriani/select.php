@@ -11,6 +11,15 @@ if($_SERVER['REQUEST_METHOD'] != 'GET'){
     exit();
 }
 
+if(isset($_GET['force500'])){
+    http_response_code(500);
+    echo json_encode([
+        'status' => 'error',
+        'msg' => 'Server error'
+    ]);
+    exit();
+}
+
 $koneksi = mysqli_connect("localhost","root","","uts_be");
 $q = mysqli_query($koneksi, "SELECT * FROM mahasiswa");
 $data = [];

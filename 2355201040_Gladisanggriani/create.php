@@ -1,5 +1,14 @@
 <?php 
 header("Content-Type: application/json; charset=UTF-8");
+if(isset($_POST['force500'])){
+    http_response_code(500);
+    echo json_encode([
+        'status' => 'error',
+        'msg' => 'Server error'
+    ]);
+    exit();
+}
+
 if($_SERVER['REQUEST_METHOD'] != 'POST'){
     http_response_code(405);
     $res = [
@@ -10,7 +19,6 @@ if($_SERVER['REQUEST_METHOD'] != 'POST'){
     exit();
 }
 
-// validasi payload
 $errors = [];
 if(!isset($_POST['name'])){
     $errors['name'] = "Minimal 3 karakter";
@@ -88,7 +96,6 @@ if ($anyImage) {
     move_uploaded_file($_FILES['image']['tmp_name'], 'img/' . $namaImage);
 }
 
-// insert ke db
 $koneksi = new mysqli('localhost', 'root', '', 'uts_be');
 $name = $_POST['name'];
 $category = $_POST['category'];

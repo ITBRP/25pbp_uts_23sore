@@ -1,16 +1,15 @@
 <?php 
 header("Content-Type: application/json; charset=UTF-8");
 if($_SERVER['REQUEST_METHOD'] != 'GET'){
-    http_response_code(405);
+    http_response_code(500);
     $res = [
         'status' => 'error',
-        'msg' => 'Method salah !'
+        'msg' => 'Server error !'
     ];
     echo json_encode($res);
     exit();
 }
 
-// validasi
 if(!isset($_GET['id'])){
     http_response_code(400);
     $res = [

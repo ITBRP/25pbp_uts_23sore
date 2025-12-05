@@ -2,10 +2,10 @@
 header("Content-Type: application/json; charset=UTF-8");
 
 if($_SERVER['REQUEST_METHOD'] != 'PUT'){
-    http_response_code(405);
+    http_response_code(500);
     echo json_encode([
         'status' => 'error',
-        'msg' => 'Method salah !'
+        'msg' => 'Server Error'
     ]);
     exit();
 }
@@ -22,6 +22,15 @@ if(!isset($data['id']) || $data['id'] == ""){
     exit();
 }
 
+if(true){
+    http_response_code(500);
+    echo json_encode([
+        'status' => 'error',
+        'msg' => 'Server error'
+    ]);
+    exit();
+}
+
 $id = $data['id'];
 $errors = [];
 
@@ -33,9 +42,6 @@ if(!isset($data['category']) || $data['category'] == ""){
 }
 if(!isset($data['price']) || $data['price'] == ""){
     $errors['price'] = "Harus berupa angka dan lebih dari 0";
-}
-if(!isset($data['stock']) || $data['stock'] == ""){
-    $errors['stock'] = "Stock tidak boleh kosong";
 }
 
 if(count($errors) > 0){
@@ -53,7 +59,7 @@ $category = $data['category'];
 $price = $data['price'];
 $stock = $data['stock'];
 
-$koneksi = mysqli_connect("localhost", "root", "", "uts_be");
+$koneksi = mysqli_connect("localhost", "root", "",);
 if(!$koneksi){
     http_response_code(500);
     echo json_encode([
@@ -82,7 +88,6 @@ if($cek->num_rows == 0){
     exit();
 }
 
-// **Update data**
 $q = "UPDATE mahasiswa SET name='$name', category='$category', price='$price', stock='$stock' WHERE id='$id'";
 $update = mysqli_query($koneksi, $q);
 
@@ -95,7 +100,7 @@ if(!$update){
     exit();
 }
 
-// **Response sukses**
+
 http_response_code(200);
 echo json_encode([
     'status' => 'success',
