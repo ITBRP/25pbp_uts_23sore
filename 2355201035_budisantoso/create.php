@@ -18,14 +18,13 @@ $errors = [];
 
 
 
-// VALIDASI NAME//
+
 if (!isset($_POST["name"]) || $_POST["name"] === "") {
     $errors["name"] = "Name tidak boleh kosong";
 } elseif (strlen($_POST["name"]) < 3) {
     $errors["name"] = "Minimal 3 karakter";
 }
 
-// VALIDASI CATEGORY//
 $validCat = ["Elektronik", "Fashion", "Makanan", "Lainnya"];
 
 if (!isset($_POST["category"]) || $_POST["category"] === "") {
@@ -34,19 +33,19 @@ if (!isset($_POST["category"]) || $_POST["category"] === "") {
     $errors["category"] = "Kategori tidak valid";
 }
 
-// VALIDASI PRICE//
+
 if (!isset($_POST["price"]) || $_POST["price"] === "" || !is_numeric($_POST["price"]) || $_POST["price"] <= 0) {
     $errors["price"] = "Harus berupa angka dan lebih dari 0";
 }
 
-// VALIDASI STOCK//
+
 $stock = $_POST["stock"] ?? 0;
 if (!is_numeric($stock) || $stock < 0) {
     $errors["stock"] = "Stock harus angka minimal 0";
 }
 
 
-// VALIDASI IMAGE
+
 
 $imageName = null;
 $hasImage = false;
@@ -67,7 +66,7 @@ if (isset($_FILES["image"]) && $_FILES["image"]["error"] !== UPLOAD_ERR_NO_FILE)
     }
 }
 
-// Jika validasi error → 400
+// Jika validasi error 400
 if (!empty($errors)) {
     http_response_code(400);
     echo json_encode([
@@ -103,7 +102,7 @@ if ($hasImage) {
 
 $koneksi = new mysqli("localhost", "root", "", "uts_be");
 
-// Jika koneksi gagal → 500
+// Jika koneksi gagal  500
 if ($koneksi->connect_errno) {
     http_response_code(500);
     echo json_encode([
@@ -122,7 +121,7 @@ $price    = $_POST["price"];
 $q = "INSERT INTO data_barang(name, category, price, stock, image)
       VALUES('$name', '$category', '$price', '$stock', '$imageName')";
 
-// Jika query gagal → 500
+// Jika query gagal  500
 if (!$koneksi->query($q)) {
     http_response_code(500);
     echo json_encode([

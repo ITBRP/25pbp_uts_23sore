@@ -1,7 +1,7 @@
 <?php
 header("Content-Type: application/json; charset=UTF-8");
 
-// Matikan error bawaan PHP agar tidak keluar HTML error
+
 mysqli_report(MYSQLI_REPORT_OFF);
 
 // Wajib GET
@@ -16,7 +16,7 @@ if ($_SERVER["REQUEST_METHOD"] !== "GET") {
 
 $koneksi = new mysqli("localhost", "root", "", "uts_be");
 
-// Jika koneksi error → langsung 500
+// Jika koneksi error 500
 if ($koneksi->connect_errno) {
     http_response_code(500);
     echo json_encode([
@@ -26,21 +26,13 @@ if ($koneksi->connect_errno) {
     exit;
 }
 
-// ===============================
-//  QUERY NORMAL (UNTUK 200)
-//  GUNAKAN QUERY SALAH UNTUK TEST 500
-// ===============================
 
-// QUERY BENAR:
-// $q = "SELECT * FROM data_barang";
-
-// QUERY SALAH (untuk memicu 500):
-$q = "SELECT * FROM data_barangsalah";  // Table salah → memicu error server
+$q = "SELECT * FROM data_barang";
 
 $result = $koneksi->query($q);
 
 if (!$result) {
-    // Query salah → error server
+    // Query salah error server
     http_response_code(500);
     echo json_encode([
         "status" => "error",
