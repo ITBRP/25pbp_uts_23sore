@@ -66,7 +66,6 @@ if(isset($_POST['stock'])){
 $anyImage = false;
 $namaImage = null;
 if (isset($_FILES['image'])) {
-
     if ($_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
         $extList = ['jpg', 'jpeg', 'png'];
         $fileName = $_FILES['image']['name'];
