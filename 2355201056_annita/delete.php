@@ -25,12 +25,18 @@ if (mysqli_num_rows($dtQuery) == 0) {
     exit();
 } else {
     $imageLama = (mysqli_fetch_array($dtQuery))['image'];
-    unlink('img/' . $imageLama);
+    if ($imageLama && file_exists('img/' . $imageLama)) {
+        unlink('img/' . $imageLama);
+    }
 }
+
 
 $q = "DELETE FROM buku WHERE id=$id";
 mysqli_query($koneksi, $q);
 echo json_encode([
     'status' => 'Success',
     'msg' => 'Proses berhasil',
+    'data' => [
+        'id' => $id,
+    ]
 ]);
