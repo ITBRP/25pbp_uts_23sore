@@ -1,39 +1,22 @@
 <?php 
+// ini code untuk proses request yang formatnya formdata
 header("Content-Type: application/json; charset=UTF-8");
 if($_SERVER['REQUEST_METHOD'] != 'GET'){
-    http_response_code(500);
+    http_response_code(405);
     $res = [
         'status' => 'error',
-        'msg' => 'Server error !'
+        'msg' => 'Method salah !'
     ];
     echo json_encode($res);
     exit();
 }
 
-if(!isset($_GET['id'])){
-    http_response_code(400);
-    $res = [
-        'status' => 'error',
-        'msg' => "ID tidak boleh kosong"
-    ];
-    echo json_encode($res);
-    exit();
-}else{
-    if($_GET['id'] == ''){
-        http_response_code(400);
-        $res = [
-            'status' => 'error',
-            'msg' => "ID tidak boleh kosong"
-        ];
-        echo json_encode($res);
-        exit();
-    }
-}
-
+// insert ke db
+$koneksi = new mysqli('localhost', 'root', '', 'uts_be');
 $id = $_GET['id'];
-$koneksi = mysqli_connect("localhost", "root", "", "uts_be");
-$q = mysqli_query($koneksi, "SELECT * FROM mahasiswa WHERE id = '$id'");
-$data = mysqli_fetch_assoc($q);
+$q = "SELECT * FROM mahasiswa WHERE id=$id";
+$dataQuery = $koneksi->query($q);
+$data = mysqli_fetch_assoc($dataQuery);
 
 if(!$data){
     http_response_code(404);
@@ -45,10 +28,8 @@ if(!$data){
     exit();
 }
 
-http_response_code(200);
-$res = [
+echo json_encode([
     'status' => 'success',
-    'msg' => 'Process success',
+    'msg' => 'Proses berhasil',
     'data' => $data
-];
-echo json_encode($res);
+]);

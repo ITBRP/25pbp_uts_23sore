@@ -1,85 +1,122 @@
 <?php
 header("Content-Type: application/json; charset=UTF-8");
-
-if($_SERVER['REQUEST_METHOD'] != 'PUT'){
-    http_response_code(500);
-    echo json_encode([
-        'status' => 'error',
-        'msg' => 'Server Error'
-    ]);
-    exit();
+$method = $_SERVER["REQUEST_METHOD"];
+if (isset($_SERVER['method'])) {
+    $method = $_SERVER['method'];
 }
 
-$json = file_get_contents("php://input");
-$data = json_decode($json, true);
-
-if(!isset($data['id']) || $data['id'] == ""){
-    http_response_code(400);
+if ($method !== 'POST') {
+    http_response_code(405);
     echo json_encode([
         'status' => 'error',
-        'msg' => 'ID tidak boleh kosong'
+        'msg' => 'Method Salah!'
     ]);
-    exit();
+    exit;
 }
 
-if(true){
-    http_response_code(500);
-    echo json_encode([
-        'status' => 'error',
-        'msg' => 'Server error'
-    ]);
-    exit();
-}
-
-$id = $data['id'];
+// validasi payload
 $errors = [];
+if(!isset($_POST['name'])){
+    $errors['name'] = "name belum dikirim";
+}else{
+    if($_POST['name']==''){
+        $errors['name'] = "name tidak boleh kosong";
+    }else{
+        if((strlen($_POST['name']))<3){
+            $errors['name'] = "Format name minimal 3 karakter";
+        }
+    }
+}
 
-if(!isset($data['name']) || $data['name'] == ""){
-    $errors['name'] = "Minimal 3 karakter";
-}
-if(!isset($data['category']) || $data['category'] == ""){
-    $errors['category'] = "Kategori tidak valid";
-}
-if(!isset($data['price']) || $data['price'] == ""){
-    $errors['price'] = "Harus berupa angka dan lebih dari 0";
+if(!isset($_POST['category'])){
+    $errors['category'] = "category belum dikirim";
+}else{
+    if($_POST['category']==''){
+        $errors['category'] = "category tidak boleh kosong";
+    }
 }
 
-if(count($errors) > 0){
+if(!isset($_POST['price'])){
+    $errors['price'] = "price belum dikirim";
+}else{
+    if($_POST['price']==''){
+        $errors['price'] = "price tidak boleh kosong";
+    }else{
+        if(!is_numeric($_POST['price']) && $_POST['price']<=0){
+            $errors['price'] = "Price harus angka dan lebih besar dari 0";
+        }
+    }
+}
+
+if(isset($_POST['stock'])){
+    if($_POST['stock']==''){
+        $errors['stok'] = "stock tidak boleh kosong";
+    }else{
+        if(!is_numeric($_POST['stock']) && $_POST['stock']<=0){
+            $errors['stok'] = "stock harus angka dan lebih besar dari 0";
+        }
+    }
+}
+
+$anyPhoto = false;
+$namaPhoto = null;
+if (isset($_FILES['image'])) {
+
+    // User memilih file
+    if ($_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
+        $allowed = ['jpg', 'jpeg', 'png'];
+        $fileName = $_FILES['image']['name']; //namaaslifile.JPEG, docx
+        $fileExt  = strtolower(pathinfo($fileName, PATHINFO_EXTENSION)); // hasilnya jadi jpeg
+
+        if (!in_array($fileExt, $allowed)) {
+            $errors['image'] = "File harus jpg, jpeg atau png";
+        } else {
+            $anyPhoto = true; // photo valid, siap disave
+            $namaPhoto = md5(date('dmyhis')) . "." . $fileExt; // fjsadlfjiajflsdjflsadkjfsad.jpeg
+        }
+    }
+
+}
+
+if( count($errors) > 0 ){
     http_response_code(400);
-    echo json_encode([
+    $res = [
         'status' => 'error',
-        'msg' => 'Data Error',
+        'msg' => "Error data",
         'errors' => $errors
-    ]);
+    ];
+
+    echo json_encode($res);
     exit();
 }
 
-$name = $data['name'];
-$category = $data['category'];
-$price = $data['price'];
-$stock = $data['stock'];
-
-$koneksi = mysqli_connect("localhost", "root", "",);
-if(!$koneksi){
-    http_response_code(500);
-    echo json_encode([
-        'status' => 'error',
-        'msg' => 'Server error'
-    ]);
-    exit();
+if ($anyPhoto) {
+    move_uploaded_file($_FILES['image']['tmp_name'], 'img/' . $namaPhoto);
 }
 
-$cek = $koneksi->query("SELECT * FROM mahasiswa WHERE id='$id'");
-if(!$cek){
-    http_response_code(500);
-    echo json_encode([
-        'status' => 'error',
-        'msg' => 'Server error'
-    ]);
-    exit();
-}
+// insert ke db
+$koneksi = new mysqli('localhost', 'root', '', 'uts_be');
+$name = $_POST['name'];
+$category = $_POST['category'];
+$price = $_POST['price'];
+$stock = $_POST['stock'];
+$id = $_GET['id'];
+$q = "UPDATE mahasiswa SET
+        name = '$name',
+        category = '$category',
+        price = $price,
+        stock = $stock,
+        image = " . ($namaPhoto ? "'$namaPhoto'" : NULL) . "
+      WHERE id = $id";
 
-if($cek->num_rows == 0){
+
+$koneksi->query($q);
+
+$id = $_GET['id'];
+$cek = $koneksi->query("SELECT id FROM mahasiswa WHERE id = $id");
+$data = mysqli_fetch_assoc($cek);
+
+if(!$data){
     http_response_code(404);
     echo json_encode([
         'status' => 'error',
@@ -88,28 +125,15 @@ if($cek->num_rows == 0){
     exit();
 }
 
-$q = "UPDATE mahasiswa SET name='$name', category='$category', price='$price', stock='$stock' WHERE id='$id'";
-$update = mysqli_query($koneksi, $q);
-
-if(!$update){
-    http_response_code(500);
-    echo json_encode([
-        'status' => 'error',
-        'msg' => 'Server error'
-    ]);
-    exit();
-}
-
-
-http_response_code(200);
 echo json_encode([
     'status' => 'success',
-    'msg' => 'Process success',
+    'msg' => 'Proses berhasil',
     'data' => [
         'id' => $id,
         'name' => $name,
         'category' => $category,
         'price' => $price,
-        'stock' => $stock
+        'stock' => $stock,
+        'image' => $namaPhoto
     ]
 ]);

@@ -1,65 +1,40 @@
 <?php
 header("Content-Type: application/json; charset=UTF-8");
-
-if($_SERVER['REQUEST_METHOD'] != 'DELETE'){
-    http_response_code(500);
-    $res = [
-        'status' => 'error',
-        'msg' => 'Server error'
-    ];
-    echo json_encode($res);
-    exit();
-}
-
-$json = file_get_contents("php://input");
-$data = json_decode($json, true);
-
-if(!isset($data['id']) || $data['id'] == ""){
-    http_response_code(400);
+// validasi method
+if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
+    http_response_code(405);
     echo json_encode([
         'status' => 'error',
-        'msg' => 'ID tidak boleh kosong'
+        'msg' => 'Method Salah !'
     ]);
-    exit();
+    exit;
 }
 
-if(true){
-    http_response_code(500);
-    echo json_encode([
-        'status' => 'error',
-        'msg' => 'Server error'
-    ]);
-    exit();
-}
+$koneksi = new mysqli('localhost', 'root', '', 'uts_be');
 
-$id = $data['id'];
-$koneksi = mysqli_connect("localhost", "root", "", "uts_be");
-$periksa = mysqli_query($koneksi, "SELECT * FROM mahasiswa WHERE id = '$id'");
-$cek = mysqli_fetch_assoc($periksa);
+// NULL jika tidak upload file
+$id = $_GET['id'];
+$q = "SELECT * FROM mahasiswa WHERE id=$id";
+$dtQuery = mysqli_query($koneksi, $q);
 
-if(!$cek){
+if(mysqli_num_rows($dtQuery)==0){
     http_response_code(404);
     echo json_encode([
         'status' => 'error',
         'msg' => 'Data not found'
     ]);
-    exit();
+    exit;
+}else{
+    $imageLama = (mysqli_fetch_array($dtQuery))['image'];
+    unlink('img/'.$imageLama);
 }
 
-$Delete = mysqli_query($koneksi, "DELETE FROM mahasiswa WHERE id = '$id'");
-if(!$Delete){
-    http_response_code(500);
-    echo json_encode([
-        'status' => 'error',
-        'msg' => 'Server error'
-    ]);
-    exit();
-}
+$q = "DELETE FROM mahasiswa WHERE id=$id";
+mysqli_query($koneksi, $q);
 
-http_response_code(200);
 echo json_encode([
     'status' => 'success',
-    'msg' => 'Delete data success',
+    'msg' => 'Proses berhasil',
     'data' => [
         'id' => $id
     ]

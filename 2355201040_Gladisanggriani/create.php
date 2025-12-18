@@ -1,14 +1,5 @@
 <?php 
 header("Content-Type: application/json; charset=UTF-8");
-if(isset($_POST['force500'])){
-    http_response_code(500);
-    echo json_encode([
-        'status' => 'error',
-        'msg' => 'Server error'
-    ]);
-    exit();
-}
-
 if($_SERVER['REQUEST_METHOD'] != 'POST'){
     http_response_code(405);
     $res = [
@@ -21,101 +12,101 @@ if($_SERVER['REQUEST_METHOD'] != 'POST'){
 
 $errors = [];
 if(!isset($_POST['name'])){
-    $errors['name'] = "Minimal 3 karakter";
+    $errors['name'] = "name belum dikirim";
 }else{
     if($_POST['name']==''){
-        $errors['name'] = "Minimal 3 karakter";
+        $errors['name'] = "name tidak boleh kosong";
     }else{
-        if(strlen($_POST['name']) < 3){
-            $errors['name'] = "Minimal 3 karakter";
+        if((strlen($_POST['name']))<3){
+            $errors['name'] = "Format name minimal 3 karakter";
         }
     }
 }
 
 if(!isset($_POST['category'])){
-    $errors['category'] = "Kategori tidak valid";
+    $errors['category'] = "category belum dikirim";
 }else{
     if($_POST['category']==''){
-        $errors['category'] = "Kategori tidak valid";
-    }else{
-        $kategoriList = ['Elektronik', 'Fashion', 'Makanan', 'Lainnya'];
-        if(!in_array($_POST['category'], $kategoriList)){
-            $errors['category'] = "Kategori tidak valid";
-        }
+        $errors['category'] = "category tidak boleh kosong";
     }
 }
 
 if(!isset($_POST['price'])){
-    $errors['price'] = "Harus berupa angka dan lebih dari 0";
+    $errors['price'] = "price belum dikirim";
 }else{
     if($_POST['price']==''){
-        $errors['price'] = "Harus berupa angka dan lebih dari 0";
+        $errors['price'] = "price tidak boleh kosong";
     }else{
-        if(!is_numeric($_POST['price']) || $_POST['price'] <= 0){
-            $errors['price'] = "Harus berupa angka dan lebih dari 0";
+        if(!is_numeric($_POST['price']) || $_POST['price']<=0){
+            $errors['price'] = "Price harus angka dan lebih besar dari 0";
         }
     }
 }
 
 if(isset($_POST['stock'])){
-    if($_POST['stock'] !== '' && (!is_numeric($_POST['stock']) || $_POST['stock'] < 0)){
-        $errors['stock'] = "Harus angka, minimal 0";
+    if($_POST['stock']==''){
+        $errors['stok'] = "stock tidak boleh kosong";
+    }else{
+        if(!is_numeric($_POST['stock']) || $_POST['stock']<=0){
+            $errors['stok'] = "stock harus angka dan lebih besar dari 0";
+        }
     }
 }
 
-$anyImage = false;
-$namaImage = null;
+$anyPhoto = false;
+$namaPhoto = null;
 if (isset($_FILES['image'])) {
+
     if ($_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
-        $extList = ['jpg', 'jpeg', 'png'];
+        $allowed = ['jpg', 'jpeg', 'png'];
         $fileName = $_FILES['image']['name'];
         $fileExt  = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
-        if (!in_array($fileExt, $extList)) {
-            $errors['image'] = "Format file tidak valid (jpg, jpeg, png)";
+        if (!in_array($fileExt, $allowed)) {
+            $errors['image'] = "File harus jpg, jpeg atau png";
         } else {
-            $anyImage = true;
-            $namaImage = $fileName;
+            $anyPhoto = true;
+            $namaPhoto = md5(date('dmyhis')) . "." . $fileExt;
         }
     }
+
 }
 
 if( count($errors) > 0 ){
     http_response_code(400);
     $res = [
         'status' => 'error',
-        'msg' => "Data error",
+        'msg' => "Error data",
         'errors' => $errors
     ];
+
     echo json_encode($res);
     exit();
 }
 
-if ($anyImage) {
-    move_uploaded_file($_FILES['image']['tmp_name'], 'img/' . $namaImage);
+if ($anyPhoto) {
+    move_uploaded_file($_FILES['image']['tmp_name'], 'img/' . $namaPhoto);
 }
 
 $koneksi = new mysqli('localhost', 'root', '', 'uts_be');
 $name = $_POST['name'];
 $category = $_POST['category'];
 $price = $_POST['price'];
-$stock = $_POST['stock'] ?? 0;
-
-$q = "INSERT INTO mahasiswa(name, category, price, stock, image) VALUES('$name','$category','$price','$stock','$namaImage')";
+$stock = $_POST['stock'];
+$q = "INSERT INTO mahasiswa(name, category, price, stock, image) 
+        VALUES('$name','$category', $price, $stock, '$namaPhoto')";
 $koneksi->query($q);
 $id = $koneksi->insert_id;
 
-$res = [
+echo json_encode([
     'status' => 'success',
-    'msg' => 'Process success',
+    'msg' => 'Proses berhasil',
     'data' => [
         'id' => $id,
         'name' => $name,
         'category' => $category,
-        'price' => (int)$price,
-        'stock' => (int)$stock,
-        'image' => $namaImage
+        'price' => $price,
+        'stock' => $stock,
+        'image' => $namaPhoto
     ]
-];
-http_response_code(201);
-echo json_encode($res);
+]);
