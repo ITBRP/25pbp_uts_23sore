@@ -1,47 +1,36 @@
 <?php
 header("Content-Type: application/json; charset=UTF-8");
 
-mysqli_report(MYSQLI_REPORT_OFF);
-$koneksi = new mysqli("localhost", "root", "", "db_be_uts");
-
-if ($koneksi->connect_errno) {
-    http_response_code(500);
-    echo json_encode(["status"=>"error","msg"=>"Server error"]);
-    exit();
+if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
+    http_response_code(405);
+    echo json_encode([
+        'status' => 'Error',
+        'msg' => 'Method salah!'
+    ]);
+    exit;
 }
 
-if($_SERVER['REQUEST_METHOD'] != 'DELETE'){
-    http_response_code(500);
-    echo json_encode(["status"=>"error","msg"=>"Server Error!"]);
-    exit();
-}
-
-if(!isset($_GET['id'])){
-    http_response_code(400);
-    echo json_encode(["status"=>"error","msg"=>"ID belum dikirim"]);
-    exit();
-}
+$koneksi = new mysqli('localhost', 'root', '', 'db_be_uts');
 
 $id = $_GET['id'];
+$q = "SELECT * FROM buku WHERE id=$id";
+$dtQuery = mysqli_query($koneksi, $q);
 
-$cek = $koneksi->prepare("SELECT id FROM buku WHERE id=?");
-$cek->bind_param("i",$id);
-$cek->execute();
-$res = $cek->get_result();
-
-if($res->num_rows == 0){
+if (mysqli_num_rows($dtQuery) == 0) {
     http_response_code(404);
-    echo json_encode(["status"=>"error","msg"=>"Data not found"]);
+    echo json_encode([
+        'status' => 'Error',
+        'msg' => 'Data not found!'
+    ]);
     exit();
+} else {
+    $imageLama = (mysqli_fetch_array($dtQuery))['image'];
+    unlink('img/' . $imageLama);
 }
 
-$del = $koneksi->prepare("DELETE FROM buku WHERE id=?");
-$del->bind_param("i",$id);
-$del->execute();
-
-http_response_code(200);
+$q = "DELETE FROM buku WHERE id=$id";
+mysqli_query($koneksi, $q);
 echo json_encode([
-    "status"=>"success",
-    "msg"=>"Delete data success",
-    "data"=>["id"=>$id]
-], JSON_PRETTY_PRINT);
+    'status' => 'Success',
+    'msg' => 'Proses berhasil',
+]);

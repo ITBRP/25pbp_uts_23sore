@@ -1,31 +1,23 @@
-<?php
+<?php 
+
 header("Content-Type: application/json; charset=UTF-8");
-
-mysqli_report(MYSQLI_REPORT_OFF);
-$koneksi = new mysqli("localhost", "root", "", "db_be_uts");
-
-if ($koneksi->connect_errno) {
-    http_response_code(500);
-    echo json_encode(["status"=>"error","msg"=>"Server error"]);
-    exit();
-}
-
 if($_SERVER['REQUEST_METHOD'] != 'GET'){
-    http_response_code(500);
-    echo json_encode(["status"=>"error","msg"=>"Server Error!"]);
+    http_response_code(405);
+    $res = [
+        'status' => 'Error',
+        'msg' => 'Method salah!'
+    ];
+    echo json_encode($res);
     exit();
 }
 
-$q = $koneksi->query("SELECT * FROM buku");
-$data = [];
+$koneksi = new mysqli('localhost', 'root', '', 'db_be_uts');
+$q = "SELECT * FROM buku";
+$dataQuery = $koneksi->query($q);
+$data = mysqli_fetch_all($dataQuery, MYSQLI_ASSOC);
 
-while($row = $q->fetch_assoc()){
-    $data[] = $row;
-}
-
-http_response_code(200);
 echo json_encode([
-    "status"=>"success",
-    "msg"=>"Process success",
-    "data"=>$data
-], JSON_PRETTY_PRINT);
+    'status' => 'Success',
+    'msg' => 'Proses berhasil',
+    'data' => $data
+]);
