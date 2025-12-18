@@ -125,7 +125,7 @@ $koneksi->query($q);
 
 echo json_encode([
     'status' => 'Success',
-    'msg' => 'Proses berhasil',
+    'msg' => 'Berhasil update data',
     'data' => [
         'id' => $id,
         'name' => $name,
