@@ -56,7 +56,7 @@ if(!isset($_POST['price'])){
     if($_POST['price']==''){
         $errors['price'] = "price tidak boleh kosong";
     }else{
-        if(!is_numeric($_POST['price']) && $_POST['price']<=0){
+        if(!is_numeric($_POST['price']) || $_POST['price']<=0){
             $errors['price'] = "Price harus angka dan lebih besar dari 0";
         }
     }
@@ -66,7 +66,7 @@ if(isset($_POST['stock'])){
     if($_POST['stock']==''){
         $errors['stok'] = "stock tidak boleh kosong";
     }else{
-        if(!is_numeric($_POST['stock']) && $_POST['stock']<=0){
+        if(!is_numeric($_POST['stock']) || $_POST['stock']<=0){
             $errors['stok'] = "stock harus angka dan lebih besar dari 0";
         }
     }
