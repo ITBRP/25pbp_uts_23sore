@@ -4,8 +4,8 @@ header("Content-Type: application/json; charset=UTF-8");
 if($_SERVER['REQUEST_METHOD'] != 'GET'){
     http_response_code(405);
     $res = [
-        'status' => 'error',
-        'msg' => 'Method salah !'
+        'status' => 'ERROR',
+        'msg' => 'METHOD SALAH !'
     ];
     echo json_encode($res);
     exit();
@@ -18,7 +18,7 @@ $dataQuery = $koneksi->query($q);
 $data = mysqli_fetch_all($dataQuery, MYSQLI_ASSOC);
 
 echo json_encode([
-    'status' => 'success',
-    'msg' => 'Proses berhasil',
+    'status' => 'SUCCESS',
+    'msg' => 'PROSES BERHASIL!',
     'data' => $data
 ]);

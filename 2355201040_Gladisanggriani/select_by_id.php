@@ -4,8 +4,8 @@ header("Content-Type: application/json; charset=UTF-8");
 if($_SERVER['REQUEST_METHOD'] != 'GET'){
     http_response_code(405);
     $res = [
-        'status' => 'error',
-        'msg' => 'Method salah !'
+        'status' => 'ERROR',
+        'msg' => 'METHOD SALAH !'
     ];
     echo json_encode($res);
     exit();
@@ -21,15 +21,15 @@ $data = mysqli_fetch_assoc($dataQuery);
 if(!$data){
     http_response_code(404);
     $res = [
-        'status' => 'error',
-        'msg' => 'Data not found'
+        'status' => 'ERROR',
+        'msg' => 'DATA NOT FOUND'
     ];
     echo json_encode($res);
     exit();
 }
 
 echo json_encode([
-    'status' => 'success',
-    'msg' => 'Proses berhasil',
+    'status' => 'SUCCESS',
+    'msg' => 'PROSES BERHASIL',
     'data' => $data
 ]);

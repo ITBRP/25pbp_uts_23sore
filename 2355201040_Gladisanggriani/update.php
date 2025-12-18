@@ -8,8 +8,8 @@ if (isset($_SERVER['method'])) {
 if ($method !== 'POST') {
     http_response_code(405);
     echo json_encode([
-        'status' => 'error',
-        'msg' => 'Method Salah!'
+        'status' => 'ERROR',
+        'msg' => 'METHOD SALAH!'
     ]);
     exit;
 }
@@ -17,43 +17,43 @@ if ($method !== 'POST') {
 // validasi payload
 $errors = [];
 if(!isset($_POST['name'])){
-    $errors['name'] = "name belum dikirim";
+    $errors['name'] = "NAMA BELUM DIKIRIM";
 }else{
     if($_POST['name']==''){
-        $errors['name'] = "name tidak boleh kosong";
+        $errors['name'] = "NAMA TAK BOLEH KOSONG";
     }else{
         if((strlen($_POST['name']))<3){
-            $errors['name'] = "Format name minimal 3 karakter";
+            $errors['name'] = "FORMAT NAMA MINIMAL 3 KARAKTER";
         }
     }
 }
 
 if(!isset($_POST['category'])){
-    $errors['category'] = "category belum dikirim";
+    $errors['category'] = "CATEGORY BELUM DIKIRIM";
 }else{
     if($_POST['category']==''){
-        $errors['category'] = "category tidak boleh kosong";
+        $errors['category'] = "CATEGORY TIDAK BOLE KOSONG";
     }
 }
 
 if(!isset($_POST['price'])){
-    $errors['price'] = "price belum dikirim";
+    $errors['price'] = "PRICE BELUM DIKIIRIM";
 }else{
     if($_POST['price']==''){
-        $errors['price'] = "price tidak boleh kosong";
+        $errors['price'] = "PRICE TIDAK BOLEH KOSONG";
     }else{
-        if(!is_numeric($_POST['price']) && $_POST['price']<=0){
-            $errors['price'] = "Price harus angka dan lebih besar dari 0";
+        if(!is_numeric($_POST['price']) || $_POST['price']<=0){
+            $errors['price'] = "PRICE HARUS ANGKA DAN LEBIH BESAR DARI 0";
         }
     }
 }
 
 if(isset($_POST['stock'])){
     if($_POST['stock']==''){
-        $errors['stok'] = "stock tidak boleh kosong";
+        $errors['stok'] = "STOCK TIDAK BOLEH KOOSONG";
     }else{
-        if(!is_numeric($_POST['stock']) && $_POST['stock']<=0){
-            $errors['stok'] = "stock harus angka dan lebih besar dari 0";
+        if(!is_numeric($_POST['stock']) || $_POST['stock']<=0){
+            $errors['stok'] = "STOCK HARUS ANGKA DAN LEBIH DARI 0";
         }
     }
 }
@@ -69,7 +69,7 @@ if (isset($_FILES['image'])) {
         $fileExt  = strtolower(pathinfo($fileName, PATHINFO_EXTENSION)); // hasilnya jadi jpeg
 
         if (!in_array($fileExt, $allowed)) {
-            $errors['image'] = "File harus jpg, jpeg atau png";
+            $errors['image'] = "FILE HARUS JPG, JPEG, ATAU PNG";
         } else {
             $anyPhoto = true; // photo valid, siap disave
             $namaPhoto = md5(date('dmyhis')) . "." . $fileExt; // fjsadlfjiajflsdjflsadkjfsad.jpeg
@@ -81,8 +81,8 @@ if (isset($_FILES['image'])) {
 if( count($errors) > 0 ){
     http_response_code(400);
     $res = [
-        'status' => 'error',
-        'msg' => "Error data",
+        'status' => 'ERROR',
+        'msg' => "DATA ERROR",
         'errors' => $errors
     ];
 
@@ -106,7 +106,7 @@ $q = "UPDATE mahasiswa SET
         category = '$category',
         price = $price,
         stock = $stock,
-        image = " . ($namaPhoto ? "'$namaPhoto'" : NULL) . "
+        image = " . ($namaPhoto !== null ? "'$namaPhoto'" : "image") . "
       WHERE id = $id";
 
 
@@ -119,15 +119,15 @@ $data = mysqli_fetch_assoc($cek);
 if(!$data){
     http_response_code(404);
     echo json_encode([
-        'status' => 'error',
-        'msg' => 'Data not found'
+        'status' => 'ERROR',
+        'msg' => 'DATA NOT FOUND'
     ]);
     exit();
 }
 
 echo json_encode([
-    'status' => 'success',
-    'msg' => 'Proses berhasil',
+    'status' => 'SUCCESS',
+    'msg' => 'PROSES BERHASIL',
     'data' => [
         'id' => $id,
         'name' => $name,

@@ -4,8 +4,8 @@ header("Content-Type: application/json; charset=UTF-8");
 if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
     http_response_code(405);
     echo json_encode([
-        'status' => 'error',
-        'msg' => 'Method Salah !'
+        'status' => 'ERROR',
+        'msg' => 'METHOD SALAH !'
     ]);
     exit;
 }
@@ -20,8 +20,8 @@ $dtQuery = mysqli_query($koneksi, $q);
 if(mysqli_num_rows($dtQuery)==0){
     http_response_code(404);
     echo json_encode([
-        'status' => 'error',
-        'msg' => 'Data not found'
+        'status' => 'ERROR',
+        'msg' => 'DATA NOT FOUND'
     ]);
     exit;
 }else{
@@ -34,7 +34,7 @@ mysqli_query($koneksi, $q);
 
 echo json_encode([
     'status' => 'success',
-    'msg' => 'Proses berhasil',
+    'msg' => 'DELETE DATA BERHASIL',
     'data' => [
         'id' => $id
     ]
