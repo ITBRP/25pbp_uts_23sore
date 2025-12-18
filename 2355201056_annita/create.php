@@ -101,6 +101,8 @@ $q = "INSERT INTO buku(name, category, price, stock, image) VALUES('$name','$cat
 $koneksi->query($q);
 $id = $koneksi->insert_id;
 
+http_response_code(201);
+
 echo json_encode([
     'status' => 'Success',
     'msg' => 'Proses berhasil',
