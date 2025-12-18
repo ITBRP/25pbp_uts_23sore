@@ -24,7 +24,7 @@ if (!$data) {
     http_response_code(404);
     echo json_encode([
         "status" => "error",
-        "msg" => "Data gaada!"
+        "msg" => "Data not found!"
     ]);
     exit();
 }
