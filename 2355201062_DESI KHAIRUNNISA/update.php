@@ -128,7 +128,7 @@ if(!$data){
     ]);
     exit();
 }
-
+ 
 echo json_encode([
     'status' => 'SUCCESS',
     'msg' => 'PROSES BERHASIL',
