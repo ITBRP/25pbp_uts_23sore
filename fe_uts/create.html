@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+      crossorigin="anonymous"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  </head>
+
+  <body>
+    <form id="myForm" method="post" enctype="multipart/form-data">
+      <div class="container pt-5">
+        <div class="justify content-center">
+          <div class="form-group mb-3">
+            <label for="" class="form-label">Name</label>
+            <input type="text" class="form-control" id="name" name="name" />
+            <div id="name" class="invalid-feedback"></div>
+          </div>
+
+          <div class="form-group mb-3">
+            <label for="" class="form-label">Category</label>
+            <select id="category" name="category" class="form-control">
+              <option value="Elektronik">Elektronik</option>
+              <option value="Fashion">Fashion</option>
+              <option value="Makanan">Makanan</option>
+              <option value="Lainnya">Lainnya</option>
+            </select>
+
+            <div id="category" class="invalid-feedback"></div>
+          </div>
+
+          <div class="form-group mb-3">
+            <label for="" class="form-label">Price</label>
+            <input type="text" class="form-control" id="price" name="price" />
+            <div id="price" class="invalid-feedback"></div>
+          </div>
+
+          <div class="form-group mb-3">
+            <label for="" class="form-label">Stock</label>
+            <input type="text" class="form-control" id="stock" name="stock" />
+          </div>
+
+          <div class="form-group mb-3">
+            <label for="" class="form-label">Image</label>
+            <input type="File" class="form-control" id="image" name="image" />
+            <div id="image" class="invalid-feedback"></div>
+          </div>
+
+          <hr />
+          <div class="form-group">
+            <button class="btn btn-primary">Simpan</button>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+      crossorigin="anonymous"
+    ></script>
+
+    <script>
+      $(document).on("submit", "#myForm", function (e) {
+        e.preventDefault();
+
+        let formData = new FormData(this);
+
+        $.ajax({
+          url: "http://localhost/25pbp_uts_23sore/2355201088_Arul/create.php",
+          type: "POST",
+          data: formData,
+          contentType: false,
+          processData: false,
+          beforeSend: function () {
+            $(".invalid-feedback").text("");
+            $(".form-control").removeClass("is-invalid");
+          },
+          success: function (res) {
+            alert(res.msg);
+            $("#myForm")[0].reset();
+          },
+          error: function (res) {
+            let response = res.responseJSON;
+            Object.entries(response.errors).forEach(([key, val]) => {
+              $(`#${key}`).text(val);
+              $(`[name=${key}]`).addClass("is-invalid");
+            });
+          },
+        });
+      });
+    </script>
+  </body>
+</html>
