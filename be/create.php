@@ -3,10 +3,10 @@ header("Content-Type: application/json; charset=UTF-8");
 
 
 if($_SERVER['REQUEST_METHOD'] != 'POST'){
-    http_response_code(405);
+    http_response_code(404);
     echo json_encode([
         'status' => 'error',
-        'msg' => 'Method error'
+        'msg' => 'Data Not Found'
     ]);
     exit();
 }
