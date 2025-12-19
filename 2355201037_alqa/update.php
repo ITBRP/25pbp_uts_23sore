@@ -153,6 +153,7 @@ if (!$koneksi->query($q)) {
     exit;
 }
 
+
 $new = $koneksi->query("SELECT * FROM data_buku WHERE id=$id")->fetch_assoc();
 
 echo json_encode([
