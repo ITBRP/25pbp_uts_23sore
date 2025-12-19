@@ -1,183 +1,120 @@
 <?php
+
 header("Content-Type: application/json; charset=UTF-8");
 
 
-
-// Hanya izinkan metode PUT untuk endpoint ini
-if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {
-    http_response_code(405);
-    echo json_encode(["status" => "error", "msg" => "Metode tidak diperbolehkan"]);
-    exit();
+$method = $_SERVER['REQUEST_METHOD'];
+if (isset($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'])) {
+    $method = $_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'];
 }
 
-// ============================
-// Mengambil ID dari query string
-// ============================
-if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-    http_response_code(400);
-    echo json_encode(["status" => "error", "msg" => "Parameter ID tidak valid"]);
-    exit();
-}
-$id = intval($_GET['id']);
 
-// ============================
-// Pemrosesan multipart form-data secara manual
-// ============================
-$raw = file_get_contents("php://input");
-
-preg_match('/boundary=(.*)$/', $_SERVER['CONTENT_TYPE'], $matches);
-$boundary = $matches[1];
-
-$blocks = preg_split("/-+$boundary/", $raw);
-array_pop($blocks);
-
-$fields = [];
-$fileData = null;
-$fileName = null;
-
-foreach ($blocks as $block) {
-    if (empty(trim($block))) continue;
-
-    if (preg_match('/name="([^"]*)"/', $block, $m)) {
-        $name = $m[1];
-
-        // Jika bagian ini berisi file
-        if (preg_match('/filename="([^"]*)"/', $block, $f)) {
-            $fileName = $f[1];
-
-            preg_match("/Content-Type: (.*?)(\r\n|\n)/", $block, $typeMatch);
-            $fileType = trim($typeMatch[1]);
-
-            $fileContent = preg_split("/\r\n\r\n|\n\n/", $block, 2)[1];
-            $fileContent = substr($fileContent, 0, strlen($fileContent) - 2);
-
-            $fileData = [
-                "name" => $fileName,
-                "type" => $fileType,
-                "content" => $fileContent
-            ];
-        } else {
-            // Jika hanya field teks biasa
-            $value = preg_split("/\r\n\r\n|\n\n/", $block, 2)[1];
-            $value = substr($value, 0, strlen($value) - 2);
-            $fields[$name] = $value;
-        }
-    }
-}
-
-// Menangkap input dari field
-$name = trim($fields['name'] ?? '');
-$category = trim($fields['category'] ?? '');
-$price = $fields['price'] ?? '';
-$stock = $fields['stock'] ?? null;
-
-// ============================
-// Bagian pengecekan input
-// ============================
-$errors = [];
-
-// Validasi nama produk
-if ($name === '' || strlen($name) < 3) {
-    $errors['name'] = "Nama minimal 3 karakter";
-}
-
-// Validasi kategori harus sesuai daftar yang diizinkan
-$allowedCategory = ["Elektronik", "Fashion", "Makanan", "Lainnya"];
-if (!in_array($category, $allowedCategory)) {
-    $errors['category'] = "Kategori tidak tersedia";
-}
-
-// Validasi harga
-if (!is_numeric($price) || intval($price) <= 0) {
-    $errors['price'] = "Harga harus berupa angka dan lebih dari nol";
-}
-$price = intval($price);
-
-// Validasi stok (boleh kosong)
-if ($stock !== null && (!is_numeric($stock) || intval($stock) < 0)) {
-    $errors['stock'] = "Stok harus angka dan minimal 0";
-}
-$stock = $stock !== null ? intval($stock) : null;
-
-// Validasi file gambar (jika ada)
-$newImageName = null;
-if ($fileData !== null) {
-    $ext = strtolower(pathinfo($fileData['name'], PATHINFO_EXTENSION));
-
-    if (!in_array($ext, ["jpg","jpeg","png"])) {
-        $errors['image'] = "Jenis file tidak didukung";
-    } elseif (strlen($fileData['content']) > 3 * 1024 * 1024) {
-        $errors['image'] = "Ukuran file melebihi 3MB";
-    }
-}
-
-// Jika ada error input, hentikan proses
-if (!empty($errors)) {
-    http_response_code(400);
+if ($method !== 'POST') {
+    http_response_code(404);
     echo json_encode([
-        "status" => "error",
-        "msg" => "Validasi gagal",
-        "errors" => $errors
+        'status' => 'error',
+        'msg' => 'Data Not Found'
     ]);
     exit();
 }
 
-// ============================
-// Koneksi database
-// ============================
-$conn = new mysqli("localhost", "root", "", "be");
-if ($conn->connect_errno) {
-    http_response_code(500);
-    echo json_encode(["status" => "error", "msg" => "Gagal terhubung ke server"]);
+
+$errors = [];
+
+
+if (!isset($_POST['name'])) {
+    $errors['name'] = 'Name belum dikirim';
+} elseif ($_POST['name'] === '') {
+    $errors['name'] = 'Name tidak boleh kosong';
+} elseif (strlen($_POST['name']) < 3) {
+    $errors['name'] = 'Name minimal 3 karakter';
+}
+
+
+if (!isset($_POST['category'])) {
+    $errors['category'] = 'Category belum dikirim';
+} elseif ($_POST['category'] === '') {
+    $errors['category'] = 'Category tidak boleh kosong';
+}
+
+
+if (!isset($_POST['price'])) {
+    $errors['price'] = 'Price belum dikirim';
+} elseif ($_POST['price'] === '') {
+    $errors['price'] = 'Price tidak boleh kosong';
+} elseif (!is_numeric($_POST['price']) || $_POST['price'] <= 0) {
+    $errors['price'] = 'Price harus angka lebih dari 0';
+}
+
+
+if (isset($_POST['stock'])) {
+    if ($_POST['stock'] === '') {
+        $errors['stock'] = 'Stock tidak boleh kosong';
+    } elseif (!is_numeric($_POST['stock']) || $_POST['stock'] <= 0) {
+        $errors['stock'] = 'Harus berupa angka dan lebih dari 0';
+    }
+}
+
+
+$uploadGambar = false;
+$namaGambar = null;
+
+if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
+    $ekstensiValid = ['jpg', 'jpeg', 'png'];
+    $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
+
+    if (!in_array($ext, $ekstensiValid)) {
+        $errors['image'] = 'File gambar tidak valid';
+    } else {
+        $uploadGambar = true;
+        $namaGambar = md5(date('YmdHis')) . '.' . $ext;
+    }
+}
+
+// Jika ada error
+if (count($errors) > 0) {
+    http_response_code(400);
+    echo json_encode([
+        'status' => 'error',
+        'msg' => 'Validasi gagal',
+        'errors' => $errors
+    ]);
     exit();
 }
 
-$conn->set_charset("utf8mb4");
 
-// Mengecek apakah data exist berdasarkan ID
-$q = $conn->prepare("SELECT image FROM products WHERE id=?");
-$q->bind_param("i", $id);
-$q->execute();
-$r = $q->get_result();
-
-if ($r->num_rows === 0) {
-    http_response_code(404);
-    echo json_encode(["status"=>"error","msg"=>"Data tidak ditemukan"]);
-    exit();
+if ($uploadGambar) {
+    move_uploaded_file($_FILES['image']['tmp_name'], 'img/' . $namaGambar);
 }
 
-$oldImage = $r->fetch_assoc()['image'];
+$db = new mysqli('localhost', 'root', '', 'pbp');
 
-// Pengolahan gambar baru bila dikirimkan
-if ($fileData !== null) {
-    $newImageName = time() . "_" . $fileData['name'];
-    file_put_contents("uploads/" . $newImageName, $fileData['content']);
-    @unlink("uploads/" . $oldImage);
-} else {
-    $newImageName = $oldImage;
-}
+$id       = $_GET['id'];
+$name     = $_POST['name'];
+$category = $_POST['category'];
+$price    = $_POST['price'];
+$stock    = $_POST['stock'] ?? 0;
 
-// Melakukan update ke tabel
-$u = $conn->prepare("UPDATE products SET name=?, category=?, price=?, stock=?, image=? WHERE id=?");
-$u->bind_param("ssdisi", $name, $category, $price, $stock, $newImageName, $id);
-$ok = $u->execute();
+$sql = "UPDATE produk SET
+            name = '$name',
+            category = '$category',
+            price = $price,
+            stock = $stock,
+            image = " . ($uploadGambar ? "'$namaGambar'" : "image") . "
+        WHERE id = $id";
 
-if (!$ok) {
-    http_response_code(500);
-    echo json_encode(["status"=>"error","msg"=>"Terjadi kesalahan pada server"]);
-    exit();
-}
+$db->query($sql);
 
-// Jika semua proses berhasil
+
 echo json_encode([
-    "status"=>"success",
-    "msg"=>"Perubahan berhasil disimpan",
-    "data"=>[
-        "id"=>$id,
-        "name"=>$name,
-        "category"=>$category,
-        "price"=>$price,
-        "stock"=>$stock,
-        "image"=>$newImageName
+    'status' => 'success',
+    'msg' => 'Data produk berhasil diperbarui',
+    'data' => [
+        'id' => $id,
+        'name' => $name,
+        'category' => $category,
+        'price' => $price,
+        'stock' => $stock,
+        'image' => $namaGambar
     ]
 ]);
