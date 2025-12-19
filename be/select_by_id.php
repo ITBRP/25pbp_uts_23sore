@@ -7,7 +7,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     http_response_code(404);
     echo json_encode([
         'status' => 'error',
-        'msg' => 'Metode request tidak sesuai'
+        'msg' => 'Method tidak sesuai'
     ]);
     exit();
 }
