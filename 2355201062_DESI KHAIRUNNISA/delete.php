@@ -1,13 +1,9 @@
 <?php
+error_reporting(0);
+mysqli_report(MYSQLI_REPORT_OFF);
 header("Content-Type: application/json; charset=UTF-8");
-
-// Deteksi metode DELETE
-$_METHOD = $_SERVER['REQUEST_METHOD'];
-if ($_METHOD === 'POST' && isset($_POST['_method']) && $_POST['_method'] === 'DELETE') {
-    $_METHOD = "DELETE";
-}
-
-if ($_METHOD !== 'DELETE') {
+// validasi method
+if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
     http_response_code(405);
     echo json_encode([
         'status' => 'error',
@@ -16,67 +12,30 @@ if ($_METHOD !== 'DELETE') {
     exit;
 }
 
-// Cek ID parameter
-if (!isset($_GET['id'])) {
-    http_response_code(400);
-    echo json_encode([
-        'status' => 'error',
-        'msg' => 'ID tidak dikirim'
-    ]);
-    exit;
-}
-$id = intval($_GET['id']);
+$koneksi = new mysqli('localhost', 'root', '', 'data_buku');
 
-// Koneksi database
-error_reporting(0);
-mysqli_report(MYSQLI_REPORT_OFF);
-$koneksi = new mysqli("localhost", "root", "", "uts_desi");
+// NULL jika tidak upload file
+$id = $_GET['id'];
+$q = "SELECT * FROM products WHERE id=$id";
+$dtQuery = mysqli_query($koneksi, $q);
 
-if ($koneksi->connect_errno) {
-    http_response_code(500);
-    echo json_encode([
-        "status" => "error",
-        "msg" => "Server error"
-    ]);
-    exit;
-}
-
-// Cek data lama
-$cek = $koneksi->query("SELECT * FROM products WHERE id=$id LIMIT 1");
-if ($cek->num_rows === 0) {
+if(mysqli_num_rows($dtQuery)==0){
     http_response_code(404);
     echo json_encode([
-        "status" => "error",
-        "msg" => "Data not found"
+        'status' => 'error',
+        'msg' => 'Data not found'
     ]);
     exit;
+}else{
+    $imageLama = (mysqli_fetch_array($dtQuery))['image'];
+    unlink('img/'.$imageLama);
 }
-
-$oldData = $cek->fetch_assoc();
-$oldImage = $oldData['image'];
-
-// Hapus data
 $q = "DELETE FROM products WHERE id=$id";
-if (!$koneksi->query($q)) {
-    http_response_code(500);
-    echo json_encode([
-        "status" => "error",
-        "msg" => "Server error"
-    ]);
-    exit;
-}
-
-// Hapus file gambar jika ada  
-if ($oldImage && file_exists("img/" . $oldImage)) {
-    unlink("img/" . $oldImage);
-}
-
-// Respons sukses
+mysqli_query($koneksi, $q);
 echo json_encode([
-    "status" => "success",
-    "msg" => "Data berhasil dihapus",
-    "data" => [
-        "id" => $id
-    ]
-]);
-?>
+        'status' => 'success',
+        'msg' => 'Delete data success',
+        'data' => [
+            'id' => $id
+        ]
+    ]);

@@ -1,60 +1,37 @@
-<?php
-header("Content-Type: application/json; charset=UTF-8");
-
-// Method check
-if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    http_response_code(405);
-    echo json_encode([
-        'status' => 'error',
-        'msg' => 'Metode Salah!'
-    ]);
-    exit;
-}
-
-// Database connection
+<?php 
 error_reporting(0);
 mysqli_report(MYSQLI_REPORT_OFF);
 
-$connection = new mysqli("localhost", "root", "", "uts_desi");
+// ini code untuk proses request yang formatnya formdata
+header("Content-Type: application/json; charset=UTF-8");
+if($_SERVER['REQUEST_METHOD'] != 'GET'){
+    http_response_code(405);
+    $res = [
+        'status' => 'error',
+        'msg' => 'Method salah !'
+    ];
+    echo json_encode($res);
+    exit();
+}
 
-if ($connection->connect_errno) {
+$koneksi = new mysqli('localhost', 'root', '', 'data_buku');
+
+if ($koneksi->connect_error) {
     http_response_code(500);
-    echo json_encode([
-        "status" => "error",
-        "msg" => "Server error"
-    ]);
-    exit;
+    $res = [
+        'status' => 'error',
+        'msg' => 'Server error'
+    ];
+    echo json_encode($res);
+    exit();
 }
 
-// Query
-$sqlQuery = "SELECT * FROM products ORDER BY id DESC";
-$queryResult = $connection->query($sqlQuery);
+$q = "SELECT * FROM products";
+$dataQuery = $koneksi->query($q);
+$data = mysqli_fetch_all($dataQuery, MYSQLI_ASSOC);
 
-$productData = [];
-
-if ($queryResult && $queryResult->num_rows > 0) {
-    while ($product = $queryResult->fetch_assoc()) {
-        $productData[] = [
-            "product_id"   => (int)$product['id'],
-            "product_name" => $product['name'],
-            "product_category" => $product['category'],
-            "product_price"  => (int)$product['price'],
-            "product_stock"  => (int)$product['stock'],
-            "product_image"  => $product['image']
-        ];
-    }
-
-    echo json_encode([
-        "status" => "success",
-        "msg" => "Data retrieved successfully",
-        "data" => $productData
-    ]);
-    exit;
-} else {
-    echo json_encode([
-        "status" => "success",
-        "msg" => "No data available",
-        "data" => []
-    ]);
-    exit;
-}
+echo json_encode([
+    'status' => 'success',
+    'msg' => 'Proses berhasil',
+    'data' => $data
+]);
