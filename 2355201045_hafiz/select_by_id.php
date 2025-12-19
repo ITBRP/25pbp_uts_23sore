@@ -1,78 +1,25 @@
-<?php
+<?php 
+// ini code untuk proses request yang formatnya formdata
 header("Content-Type: application/json; charset=UTF-8");
-
-
-if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+if($_SERVER['REQUEST_METHOD'] != 'GET'){
     http_response_code(405);
-    echo json_encode([
+    $res = [
         'status' => 'error',
-        'msg' => 'Method Salah !'
-    ]);
-    exit;
+        'msg' => 'Method salah !'
+    ];
+    echo json_encode($res);
+    exit();
 }
 
-if (!isset($_GET['id'])) {
-    http_response_code(400);
-    echo json_encode([
-        'status' => 'error',
-        'msg' => 'ID tidak dikirim'
-    ]);
-    exit;
-}
-
-$id = intval($_GET['id']);
-
-//Koneks database
-$koneksi = new mysqli("localhost", "root", "", "uts");
-
-if ($koneksi->connect_errno) {
-    http_response_code(500);
-    echo json_encode([
-        "status" => "error",
-        "msg" => "Server error"
-    ]);
-    exit;
-}
-
-
-$q = "SELECT * FROM data_buku WHERE id = $id LIMIT 1";
-$result = $koneksi->query($q);
-
-
-if (!$result) {
-    http_response_code(500);
-    echo json_encode([
-        "status" => "error",
-        "msg" => "Server error"
-    ]);
-    exit;
-}
-
-
-if ($result->num_rows === 0) {
-    http_response_code(404);
-    echo json_encode([
-        "status" => "error",
-        "msg" => "Data not found"
-    ]);
-    exit;
-}
-
-
-$row = $result->fetch_assoc();
-
+// insert ke db
+$koneksi = new mysqli('localhost', 'root', '', 'uts');
+$id = $_GET['id'];
+$q = "SELECT * FROM data_buku WHERE id=$id";
+$dataQuery = $koneksi->query($q);
+$data = mysqli_fetch_assoc($dataQuery);
 
 echo json_encode([
-    "status" => "success",
-    "msg" => "Process success",
-    "data" => [
-        "id" => (int)$row['id'],
-        "name" => $row['name'],
-        "category" => $row['category'],
-        "price" => (int)$row['price'],
-        "stock" => (int)$row['stock'],
-        "image" => $row['image']
-    ]
+    'status' => 'success',
+    'msg' => 'Proses berhasil',
+    'data' => $data
 ]);
-?>
-

@@ -1,60 +1,24 @@
-<?php
+<?php 
+// ini code untuk proses request yang formatnya formdata
 header("Content-Type: application/json; charset=UTF-8");
-
-// method check
-if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+if($_SERVER['REQUEST_METHOD'] != 'GET'){
     http_response_code(405);
-    echo json_encode([
+    $res = [
         'status' => 'error',
-        'msg' => 'Method Salah !'
-    ]);
-    exit;
+        'msg' => 'Method salah !'
+    ];
+    echo json_encode($res);
+    exit();
 }
 
-// koneksi
-$koneksi = new mysqli("localhost", "root", "", "uts");
+// insert ke db
+$koneksi = new mysqli('localhost', 'root', '', 'uts');
+$q = "SELECT * FROM data_buku";
+$dataQuery = $koneksi->query($q);
+$data = mysqli_fetch_all($dataQuery, MYSQLI_ASSOC);
 
-if ($koneksi->connect_errno) {
-    http_response_code(500);
-    echo json_encode([
-        "status" => "error",
-        "msg" => "Server error"
-    ]);
-    exit;
-}
-
-// query select semua data
-$q = "SELECT * FROM data_buku ORDER BY id ASC";
-$result = $koneksi->query($q);
-
-$data = [];
-
-if ($result && $result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-
-    
-        $data[] = [
-            "id" => (int)$row['id'],
-            "name" => $row['name'],
-            "category" => $row['category'],
-            "price" => (int)$row['price'],
-            "stock" => (int)$row['stock'],
-            "image" => $row['image']
-        ];
-    }
-
-    echo json_encode([
-        "status" => "success",
-        "msg" => "Process success",
-        "data" => $data
-    ]);
-    exit;
-} else {
-    echo json_encode([
-        "status" => "success",
-        "msg" => "Tidak ada data",
-        "data" => []
-    ]);
-    exit;
-}
-?>
+echo json_encode([
+    'status' => 'success',
+    'msg' => 'Proses berhasil',
+    'data' => $data
+]);
