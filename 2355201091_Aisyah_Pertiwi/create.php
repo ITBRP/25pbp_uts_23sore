@@ -1,86 +1,115 @@
-<?php
-require "db.php";
-
-function send($code, $msg, $data = null){
-    http_response_code($code);
-    echo json_encode([
-        "code" => $code,
-        "message" => $msg,
-        "data" => $data
-    ]);
-    exit;
+<?php 
+// ini code untuk proses request yang formatnya formdata
+header("Content-Type: application/json; charset=UTF-8");
+if($_SERVER['REQUEST_METHOD'] != 'POST'){
+    http_response_code(405);
+    $res = [
+        'status' => 'error',
+        'msg' => 'Method salah !'
+    ];
+    echo json_encode($res);
+    exit();
 }
 
-$nama     = trim($_POST['nama'] ?? '');
-$kategori = trim($_POST['category'] ?? '');
-$harga    = $_POST['price'] ?? 0;
-$stok     = $_POST['stock'] ?? 0;
-
-$validasi = [];
-
-// validasi nama
-if(strlen($nama) < 3){
-    $validasi['nama'] = "Nama minimal 3 huruf";
-}
-
-// validasi kategori
-$kategori_valid = ['Elektronik','Fashion','Makanan','Lainnya'];
-if(!in_array($kategori, $kategori_valid)){
-    $validasi['category'] = "Kategori tidak tersedia";
-}
-
-// validasi harga
-if(!is_numeric($harga) || $harga <= 0){
-    $validasi['price'] = "Harga harus lebih dari 0";
-}
-
-// validasi stok
-if(!is_numeric($stok) || $stok < 0){
-    $validasi['stock'] = "Stok tidak valid";
-}
-
-// validasi gambar
-$gambar = null;
-if(isset($_FILES['image']) && $_FILES['image']['error'] === 0){
-    $tipe = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
-    $tipe = strtolower($tipe);
-
-    if(!in_array($tipe, ['jpg','jpeg','png'])){
-        $validasi['image'] = "Format gambar salah";
-    }
-
-    if($_FILES['image']['size'] > 3000000){
-        $validasi['image'] = "Ukuran maksimal 3MB";
-    }
-
-    if(empty($validasi)){
-        $gambar = uniqid() . '.' . $tipe;
-        move_uploaded_file($_FILES['image']['tmp_name'], "upload/" . $gambar);
+// validasi payload
+$errors = [];
+if(!isset($_POST['name'])){
+    $errors['name'] = "Name belum dikirm yaww";
+}else{
+    if($_POST['name']==''){
+        $errors['name'] = "Name gaboleh kosong ";
+    }else{
+        if((strlen($_POST['name']))<3){
+            $errors['name'] = "Format name minimal 3 karakter";
+        }
     }
 }
 
-if(!empty($validasi)){
-    send(400, "Validasi gagal", $validasi);
+if(!isset($_POST['category'])){
+    $errors['category'] = "category belum dikirim";
+}else{
+    if($_POST['category']==''){
+        $errors['category'] = "category tidak boleh kosong";
+    }
 }
 
-$sql = "INSERT INTO buku (nama, category, price, stock, image) VALUES (?, ?, ?, ?, ?)";
-$query = $koneksi->prepare($sql);
-
-if(!$query){
-    send(500, "Query gagal disiapkan");
+if(!isset($_POST['price'])){
+    $errors['price'] = "Price Belum dikirim yaww";
+}else{
+    if($_POST['price']==''){
+        $errors['price'] = "Price gaboleh kosong ";
+    }else{
+        if(!is_numeric($_POST['price']) || $_POST['price']<=0){
+            $errors['price'] = "Price harus angka dan lebih besar dari 0";
+        }
+    }
 }
 
-$query->bind_param("ssiis", $nama, $kategori, $harga, $stok, $gambar);
-
-if($query->execute()){
-    send(201, "Data berhasil disimpan", [
-        "id" => $query->insert_id,
-        "nama" => $nama,
-        "category" => $kategori,
-        "price" => (int)$harga,
-        "stock" => (int)$stok,
-        "image" => $gambar
-    ]);
+if(isset($_POST['stock'])){
+    if($_POST['stock']==''){
+        $errors['stok'] = "stock tidak boleh kosong";
+    }else{
+        if(!is_numeric($_POST['stock']) || $_POST['stock']<=0){
+            $errors['stok'] = "stock harus angka dan lebih besar dari 0";
+        }
+    }
 }
 
-send(500, "Gagal menyimpan data");
+$anyPhoto = false;
+$namaPhoto = null;
+if (isset($_FILES['image'])) {
+
+    // User memilih file
+    if ($_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
+        $allowed = ['jpg', 'jpeg', 'png'];
+        $fileName = $_FILES['image']['name']; //namaaslifile.JPEG, docx
+        $fileExt  = strtolower(pathinfo($fileName, PATHINFO_EXTENSION)); // hasilnya jadi jpeg
+
+        if (!in_array($fileExt, $allowed)) {
+            $errors['image'] = "File harus jpg, jpeg atau png";
+        } else {
+            $anyPhoto = true; // photo valid, siap disave
+            $namaPhoto = md5(date('dmyhis')) . "." . $fileExt; // fjsadlfjiajflsdjflsadkjfsad.jpeg
+        }
+    }
+
+}
+
+if( count($errors) > 0 ){
+    http_response_code(400);
+    $res = [
+        'status' => 'error',
+        'msg' => "Error data",
+        'errors' => $errors
+    ];
+
+    echo json_encode($res);
+    exit();
+}
+
+if ($anyPhoto) {
+    move_uploaded_file($_FILES['image']['tmp_name'], 'img/' . $namaPhoto);
+}
+
+// insert ke db
+$koneksi = new mysqli('localhost', 'root', '', 'uts_pbb');
+$name = $_POST['name'];
+$category = $_POST['category'];
+$price = $_POST['price'];
+$stock = $_POST['stock'];
+$q = "INSERT INTO buku(name, category, price, stock, image) VALUES('$name','$category', $price, $stock, '$namaPhoto')";
+$koneksi->query($q);
+$id = $koneksi->insert_id;
+
+echo json_encode([
+    'status' => 'success',
+    'msg' => 'Proses berhasil',
+    'data' => [
+        'id' => $id,
+        'name' => $name,
+        'category' => $category,
+        'price' => $price,
+        'stock' => $stock,
+        'image' => $namaPhoto
+    ]
+]);

@@ -1,33 +1,39 @@
 <?php
-require "db.php";
-
-// Cek metode
-if ($_SERVER['REQUEST_METHOD'] != 'DELETE') {
-    apiResponse(405, "Method salah!");
-}
-
-$id = $_GET['id'] ?? 0;
-
-// Validasi ID
-if ($id == 0) {
-    apiResponse(400, "ID tidak valid");
-}
-
-// Cek apakah data ada
-$cek = mysqli_query($koneksi, "SELECT * FROM buku WHERE id='$id'");
-
-if (mysqli_num_rows($cek) == 0) {
-    apiResponse(404, "Data tidak ditemukan");
-}
-
-// Hapus data
-$hapus = mysqli_query($koneksi, "DELETE FROM buku WHERE id='$id'");
-
-if ($hapus) {
-    apiResponse(200, "Delete data success", [
-        "id" => $id
+header("Content-Type: application/json; charset=UTF-8");
+// validasi method
+if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
+    http_response_code(405);
+    echo json_encode([
+        'status' => 'error',
+        'msg' => 'Method Salah !'
     ]);
+    exit;
 }
 
-apiResponse(500, "Server error");
-?>
+$koneksi = new mysqli('localhost', 'root', '', 'uts_pbb');
+
+// NULL jika tidak upload file
+$id = $_GET['id'];
+$q = "SELECT * FROM buku WHERE id=$id";
+$dtQuery = mysqli_query($koneksi, $q);
+
+if(mysqli_num_rows($dtQuery)==0){
+    http_response_code(404);
+    echo json_encode([
+        'status' => 'error',
+        'msg' => 'Data not found'
+    ]);
+    exit;
+}else{
+    $imageLama = (mysqli_fetch_array($dtQuery))['image'];
+    unlink('img/'.$imageLama);
+}
+
+
+$q = "DELETE FROM buku WHERE id=$id";
+mysqli_query($koneksi, $q);
+echo json_encode([
+    'status' => 'success',
+    'msg' => 'Proses berhasil',
+]);
+
