@@ -118,14 +118,14 @@ if ($r->num_rows === 0) {
     exit();
 }
 
-$oldImage = $r->fetch_assoc()['image'];
+$fotolama = $r->fetch_assoc()['image'];
 
 if ($fileData !== null) {
     $newImageName = time() . "_" . $fileData['name'];
     file_put_contents("uploads/" . $newImageName, $fileData['content']);
-    @unlink("uploads/" . $oldImage);
+    @unlink("uploads/" . $fotolama);
 } else {
-    $newImageName = $oldImage;
+    $newImageName = $fotolama;
 }
 
 
