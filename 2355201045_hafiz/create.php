@@ -126,6 +126,7 @@ if (!$koneksi->query($q)) {
 
 $id = $koneksi->insert_id;
 
+http_response_code(201);
 echo json_encode([
     'status' => 'success',
     'msg' => 'Proses berhasil',

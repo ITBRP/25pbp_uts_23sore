@@ -13,6 +13,16 @@ if($_SERVER['REQUEST_METHOD'] != 'GET'){
 
 // insert ke db
 $koneksi = new mysqli('localhost', 'root', '', 'uts');
+
+if ($koneksi->connect_errno) {
+    http_response_code(500);
+    echo json_encode([
+        "status" => "error",
+        "msg" => "Server error"
+    ]);
+    exit;
+}
+
 $q = "SELECT * FROM data_buku";
 $dataQuery = $koneksi->query($q);
 $data = mysqli_fetch_all($dataQuery, MYSQLI_ASSOC);
