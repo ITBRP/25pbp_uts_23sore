@@ -12,7 +12,7 @@ if($_SERVER['REQUEST_METHOD'] != 'GET'){
 
 error_reporting(0);
 mysqli_report(MYSQLI_REPORT_OFF);
-$koneksi = new mysqli('localhost', 'root', '', 'uts_backkend');
+$koneksi = new mysqli('localhost', 'root', '', 'uts_backend');
 
 if ($koneksi->connect_error) {
     http_response_code(500);
@@ -41,5 +41,6 @@ if ($dataQuery->num_rows == 0) {
         'data' => $data
     ]);
 }
+
 
 ?>
