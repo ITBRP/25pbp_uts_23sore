@@ -11,6 +11,7 @@ if($_SERVER['REQUEST_METHOD'] != 'POST'){
     exit();
 }
 
+
 // validasi payload
 $errors = [];
 if(!isset($_POST['name'])){
