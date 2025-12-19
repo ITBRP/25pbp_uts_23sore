@@ -1,65 +1,38 @@
-<?php
+<?php 
+// ini code untuk proses request yang formatnya formdata
 header("Content-Type: application/json; charset=UTF-8");
-
-// method check
-if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+if($_SERVER['REQUEST_METHOD'] != 'GET'){
     http_response_code(405);
-    echo json_encode([
+    $res = [
         'status' => 'error',
-        'msg' => 'Method Salah !'
-    ]);
-    exit;
+        'msg' => 'Method salah !'
+    ];
+    echo json_encode($res);
+    exit();
 }
 
-// koneksi database
+// insert ke db
 error_reporting(0);
 mysqli_report(MYSQLI_REPORT_OFF);
+$koneksi = new mysqli('localhost', 'root', '', 'uts_backend');
 
-$koneksi = new mysqli("localhost", "root", "", "uts_backend");
-
-if ($koneksi->connect_errno) {
+if ($koneksi->connect_error) {
     http_response_code(500);
-    echo json_encode([
-        "status" => "error",
-        "msg" => "Server error"
-    ]);
-    exit;
+    $res = [
+        'status' => 'error',
+        'msg' => 'Server error'
+    ];
+    echo json_encode($res);
+    exit();
 }
 
-// query
-$q = "SELECT * FROM products ORDER BY id DESC";
-$result = $koneksi->query($q);
+$q = "SELECT * FROM products";
+$dataQuery = $koneksi->query($q);
+$data = mysqli_fetch_all($dataQuery, MYSQLI_ASSOC);
 
-$data = [];
-
-if ($result && $result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        $data[] = [
-            "id"       => (int)$row['id'],
-            "name"     => $row['name'],
-            "category" => $row['category'],
-            "price"    => (int)$row['price'],
-            "stock"    => (int)$row['stock'],
-            "image"    => $row['image']
-        ];
-    }
-
-    echo json_encode([
-        "status" => "success",
-        "msg" => "Process success",
-        "data" => $data
-    ]);
-    exit;
-
-} else {
-    echo json_encode([
-        "status" => "success",
-        "msg" => "Tidak ada data",
-        "data" => []
-    ]);
-    exit;
-}
-// 2355201025
-?>
-
+echo json_encode([
+    'status' => 'success',
+    'msg' => 'Proses berhasil',
+    'data' => $data
+]);
 
