@@ -1,78 +1,40 @@
 <?php
 header("Content-Type: application/json; charset=UTF-8");
+error_reporting(0); // Mematikan error teks agar JSON tetap bersih
 
-// methode
-if ($_SERVER['REQUEST_METHOD'] != 'DELETE') {
-    http_response_code(500);
-    echo json_encode([
-        "status" => "error",
-        "msg" => "Server error"
-    ]);
-    exit();
-}
-
-if (!isset($_GET['id'])) {
-    http_response_code(400);
-    echo json_encode([
-        "status" => "error",
-        "msg" => "ID tidak dikirim"
-    ]);
-    exit();
-}
-
-$id = $_GET['id'];
-
-if (!is_numeric($id)) {
-    http_response_code(400);
-    echo json_encode([
-        "status" => "error",
-        "msg" => "ID harus berupa angka"
-    ]);
-    exit();
-}
-
-// koneksi database
-$koneksi = new mysqli("localhost", "root", "", "2355201043");
-
+// 1. Koneksi & Cek Error 500
+$koneksi = new mysqli('localhost', 'root', '', '2355201043');
 if ($koneksi->connect_error) {
     http_response_code(500);
-    echo json_encode([
-        "status" => "error",
-        "msg" => "Server error"
-    ]);
-    exit();
+    exit(json_encode(["status" => "error", "msg" => "Server error"]));
 }
 
-// cek data
-$cek = $koneksi->query("SELECT * FROM db_baru WHERE id='$id'");
+// 2. Ambil ID & Cari Data
+$id = $_GET['id'] ?? null;
+$data = $koneksi->query("SELECT image FROM db_baru WHERE id = '$id'")->fetch_assoc();
 
-if ($cek->num_rows == 0) {
+// 3. Cek Error 404
+if (!$id || !$data) {
     http_response_code(404);
-    echo json_encode([
-        "status" => "error",
-        "msg" => "Data not found"
-    ]);
-    exit();
+    exit(json_encode(["status" => "error", "msg" => "Data not found"]));
 }
 
-// hapus data
-$hapus = $koneksi->query("DELETE FROM db_baru WHERE id='$id'");
+// 4. Hapus File Gambar di Folder (Jika ada)
+if ($data['image'] && file_exists("uploads/" . $data['image'])) {
+    unlink("uploads/" . $data['image']);
+}
 
-if (!$hapus) {
+// 5. Eksekusi Hapus di Database
+if ($koneksi->query("DELETE FROM db_baru WHERE id = '$id'")) {
+    http_response_code(200);
+    echo json_encode([
+        "status" => "success",
+        "msg"    => "Delete data success",
+        "data"   => ["id" => (int)$id]
+    ]);
+} else {
     http_response_code(500);
-    echo json_encode([
-        "status" => "error",
-        "msg" => "Server error"
-    ]);
-    exit();
+    echo json_encode(["status" => "error", "msg" => "Server error"]);
 }
 
-// respon sukses
-http_response_code(200);
-echo json_encode([
-    "status" => "success",
-    "msg" => "Delete data success",
-    "data" => [
-        "id" => (int)$id
-    ]
-]);
+$koneksi->close();

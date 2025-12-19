@@ -1,142 +1,124 @@
 <?php 
-// ini code untuk proses request yang formatnya formdata
+// 1. Set Header JSON
 header("Content-Type: application/json; charset=UTF-8");
 
+// 2. Cek Method Request
 if($_SERVER['REQUEST_METHOD'] != 'POST'){
-    http_response_code(500);
-    $res = [
+    http_response_code(405);
+    echo json_encode([
         'status' => 'error',
-        'msg' => 'Server error !'
-    ];
-    echo json_encode($res);
+        'msg' => 'Method salah !'
+    ]);
     exit();
 }
 
-//VALIDASI PAYLOAD
+// 3. Validasi Payload 
 $errors = [];
 
-// name
-if(!isset($_POST['name'])){
-    $errors['name'] = "Name belum dikirim";
-}else{
-    if($_POST['name'] == ''){
-        $errors['name'] = "Name tidak boleh kosong";
-    }else{
-        if(strlen($_POST['name']) < 3){
-            $errors['name'] = "Minimal 3 karakter";
-        }
-    }
+// Validasi Name
+if(!isset($_POST['name']) || $_POST['name'] == ''){
+    $errors['name'] = "Name tidak boleh kosong";
+} else if(strlen($_POST['name']) < 3){
+    $errors['name'] = "Minimal 3 karakter";
 }
 
-// category
-$kategori_valid = ["Elektronik", "Fashion", "Makanan", "Lainnya"];
-if(!isset($_POST['category'])){
+// Validasi Category
+$valid_categories = ['Elektronik', 'Fashion', 'Makanan', 'Lainnya'];
+if(!isset($_POST['category']) || $_POST['category'] == ''){
     $errors['category'] = "Kategori belum dikirim";
-}else{
-    if(!in_array($_POST['category'], $kategori_valid)){
-        $errors['category'] = "Kategori tidak valid";
-    }
+} else if(!in_array($_POST['category'], $valid_categories)){
+    $errors['category'] = "Kategori tidak valid";
 }
 
-// price
-if(!isset($_POST['price'])){
+// Validasi Price
+if(!isset($_POST['price']) || $_POST['price'] == ''){
     $errors['price'] = "Price belum dikirim";
-}else{
-    if(!is_numeric($_POST['price']) || $_POST['price'] <= 0){
-        $errors['price'] = "Harus berupa angka dan lebih dari 0";
-    }
+} else if(!is_numeric($_POST['price']) || $_POST['price'] <= 0){
+    $errors['price'] = "Harus berupa angka dan lebih dari 0";
 }
 
-// Stock 
+// Validasi Stock (Optional)
+$stock = isset($_POST['stock']) ? $_POST['stock'] : 0;
 if(isset($_POST['stock']) && $_POST['stock'] !== ''){
     if(!is_numeric($_POST['stock']) || $_POST['stock'] < 0){
-        $errors['stock'] = "Stock minimal 0";
-    }else{
-        $stock = (int) $_POST['stock']; // pakai nilai user
-    }
-}else{
-    $stock = 0; // default kalau tidak dikirim
-}
-
-// Image
-$anyImage = false;
-$imageName = null;
-
-if (isset($_FILES['image'])) {
-
-    // Jika user memilih file
-    if ($_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
-
-        $allowed = ['jpg', 'jpeg', 'png'];
-        $fileName = $_FILES['image']['name'];
-        $fileExt  = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-
-        //VALIDASI FORMAT FILE
-        if (!in_array($fileExt, $allowed)) {
-            $errors['image'] = "Format file tidak valid (hanya jpg, jpeg, png)";
-        } 
-        //VALIDASI UKURAN
-        elseif ($_FILES['image']['size'] > 3 * 1024 * 1024) {
-            $errors['image'] = "Ukuran file maksimal 3MB";
-        } 
-        //JIKA LOLOS SEMUA VALIDASI
-        else {
-
-            if(!is_dir('uploads')){
-                mkdir('uploads', 0777, true);
-            }
-
-            // Hitung jumlah file produk di folder
-            $files = glob("uploads/produk*.jpg");
-            $nextNumber = count($files) + 1;
-
-            // Nama otomatis
-            $imageName = "produk" . $nextNumber . ".jpg";
-
-            $anyImage = true;
-        }
+        $errors['stock'] = "Harus angka, minimal 0";
     }
 }
 
-// JIKA ADA ERROR
-if( count($errors) > 0 ){
+// 4. Validasi Image
+$anyPhoto = false;
+$namaPhoto = null;
+$targetDir = "uploads/"; 
+
+if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
+    $allowed = ['jpg', 'jpeg', 'png'];
+    $fileName = $_FILES['image']['name'];
+    $fileExt  = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+    $fileSize = $_FILES['image']['size'];
+
+    if (!in_array($fileExt, $allowed)) {
+        $errors['image'] = "Format file tidak valid (hanya jpg, jpeg, png)";
+    } else if ($fileSize > 3 * 1024 * 1024) {
+        $errors['image'] = "Ukuran file terlalu besar (max 3MB)";
+    } else {
+        $anyPhoto = true;
+        
+        // Logika penamaan berurutan (produk1, produk2, dst)
+        if (!is_dir($targetDir)) mkdir($targetDir, 0777, true); 
+        
+        $files = glob($targetDir . "produk*." . $fileExt); 
+        $count = count($files) + 1; 
+        $namaPhoto = "produk" . $count . "." . $fileExt; 
+    }
+}
+
+// 5. Cek Jika Ada Error
+if(count($errors) > 0){
     http_response_code(400);
-    $res = [
+    echo json_encode([
         'status' => 'error',
         'msg' => "Data error",
         'errors' => $errors
-    ];
-    echo json_encode($res);
+    ]);
     exit();
 }
 
-// UPLOAD IMAGE
-if ($anyImage) {
-    move_uploaded_file($_FILES['image']['tmp_name'], 'uploads/' . $imageName);
+// 6. Proses Upload File
+if ($anyPhoto) {
+    move_uploaded_file($_FILES['image']['tmp_name'], $targetDir . $namaPhoto);
 }
 
-// INSERT KE DATABASE
+// 7. Insert ke Database (Menggunakan database & tabel Anda)
 $koneksi = new mysqli('localhost', 'root', '', '2355201043');
+
 $name     = $_POST['name'];
 $category = $_POST['category'];
-$price    = (int) $_POST['price'];
+$price    = $_POST['price'];
+$stock    = $_POST['stock'] ?? 0;
 
-$q = "INSERT INTO db_baru(name, category, price, stock, image) 
-      VALUES('$name','$category',$price,$stock,'$imageName')";
+$q = "INSERT INTO db_baru (name, category, price, stock, image) 
+      VALUES ('$name', '$category', '$price', '$stock', '$namaPhoto')";
 
-$koneksi->query($q);
-$id = $koneksi->insert_id;
-
-http_response_code(201);
-echo json_encode([
-    'status' => 'success',
-    'msg' => 'Process success',
-    'data' => [
-        'id' => $id,
-        'name' => $name,
-        'category' => $category,
-        'price' => (int)$price,
-        'stock' => (int)$stock,
-        'image' => $imageName
-    ]
+if($koneksi->query($q)){
+    $id = $koneksi->insert_id;
+    http_response_code(201);
+    echo json_encode([
+        'status' => 'success',
+        'msg' => 'Process success',
+        'data' => [
+            'id' => $id,
+            'name' => $name,
+            'category' => $category,
+            'price' => (int)$price,
+            'stock' => (int)$stock,
+            'image' => $namaPhoto
+        ]
     ]);
+} else {
+    http_response_code(500);
+    echo json_encode([
+        'status' => 'error',
+        'msg' => 'Server error'
+    ]);
+}
+?>
