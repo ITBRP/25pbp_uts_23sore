@@ -90,8 +90,8 @@ if (count($errors) > 0) {
 
 //=========================================== databases 2355201025
 
-error_reporting(0);                                                   // wajib yang lain sunah
-mysqli_report(MYSQLI_REPORT_OFF);                                     // wajib yang lain sunah
+error_reporting(0);                                              
+mysqli_report(MYSQLI_REPORT_OFF); 
 $koneksi = new mysqli("localhost", "root", "", "uts_backend");
 if ($koneksi->connect_errno) {
     http_response_code(500);
