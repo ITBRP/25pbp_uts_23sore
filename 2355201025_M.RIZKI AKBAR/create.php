@@ -89,7 +89,19 @@ if ($anyPhoto) {
 }
 
 // ================== PENYESUAIAN DATABASE ==================
+error_reporting(0);
+mysqli_report(MYSQLI_REPORT_OFF);
 $koneksi = new mysqli('localhost', 'root', '', 'uts_backend');
+
+if ($koneksi->connect_error) {
+    http_response_code(500);
+    $res = [
+        'status' => 'error',
+        'msg' => 'Server error'
+    ];
+    echo json_encode($res);
+    exit();
+}
 
 $name     = $_POST['name'];
 $category = $_POST['category'];
@@ -99,8 +111,19 @@ $stock    = $_POST['stock'];
 $q = "INSERT INTO products (name, category, price, stock, image)
       VALUES ('$name', '$category', $price, $stock, '$namaPhoto')";
 
-$koneksi->query($q);
+if (!$koneksi->query($q)) {
+    http_response_code(500);
+    $res = [
+        'status' => 'error',
+        'msg' => 'Server error'
+    ];
+    echo json_encode($res);
+    exit();
+}
+
 $id = $koneksi->insert_id;
+
+
 
 echo json_encode([
     'status' => 'success',
