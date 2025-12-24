@@ -34,12 +34,12 @@ if(!isset($_POST['category'])){
 }
 
 if(!isset($_POST['price'])){
-    $errors['price'] = "price belum dikirim";
+    $errors['price'] = "price belum dikirimm";
 }else{
     if($_POST['price']==''){
         $errors['price'] = "price tidak boleh kosong";
     }else{
-        if(!is_numeric($_POST['price']) && $_POST['price']<=0){
+        if(!is_numeric($_POST['price']) || $_POST['price']<=0){
             $errors['price'] = "Price harus angka dan lebih besar dari 0";
         }
     }
@@ -47,10 +47,10 @@ if(!isset($_POST['price'])){
 
 if(isset($_POST['stock'])){
     if($_POST['stock']==''){
-        $errors['stok'] = "stock tidak boleh kosong";
+        $errors['stock'] = "stock tidak boleh kosong";
     }else{
-        if(!is_numeric($_POST['stock']) && $_POST['stock']<=0){
-            $errors['stok'] = "stock harus angka dan lebih besar dari 0";
+        if(!is_numeric($_POST['stock']) || $_POST['stock']<=0){
+            $errors['stock'] = "stock harus angka dan lebih besar dari 0";
         }
     }
 }
@@ -63,13 +63,13 @@ if (isset($_FILES['image'])) {
     if ($_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
         $allowed = ['jpg', 'jpeg', 'png'];
         $fileName = $_FILES['image']['name']; //namaaslifile.JPEG, docx
-        $fileExt  = strtolower(pathinfo($fileName, PATHINFO_EXTENSION)); // hasilnya jadi jpeg
+        $fileExt  = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
         if (!in_array($fileExt, $allowed)) {
             $errors['image'] = "File harus jpg, jpeg atau png";
         } else {
             $anyPhoto = true; // photo valid, siap disave
-            $namaPhoto = md5(date('dmyhis')) . "." . $fileExt; // fjsadlfjiajflsdjflsadkjfsad.jpeg
+            $namaPhoto = md5(date('dmyhis')) . "." . $fileExt;
         }
     }
 
@@ -93,11 +93,12 @@ if ($anyPhoto) {
 
 // insert ke db
 $koneksi = new mysqli('localhost', 'root', '', 'uts_pbpsore');
-$nim = $_POST['name'];
-$nama = $_POST['category'];
-$nama = $_POST['price'];
-$nama = $_POST['stock'];
-$q = "INSERT INTO mahasiswa(name, category, price, stock, image) VALUES('$name','$category', $price, $stock, '$namaPhoto')";
+$name = $_POST['name'];
+$category = $_POST['category'];
+$price = $_POST['price'];
+$stock = $_POST['stock'];
+$q = "INSERT INTO buku(name, category, price, stock, image) 
+    VALUES('$name','$category', $price, $stock, '$namaPhoto')";
 $koneksi->query($q);
 $id = $koneksi->insert_id;
 
